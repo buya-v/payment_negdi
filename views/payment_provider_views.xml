@@ -1,0 +1,16 @@
+<odoo>
+    <record id="view_payment_provider_form_negdi" model="ir.ui.view">
+        <field name="name">Payment Provider Form (Negdi)</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.view_payment_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='provider_specific_options']" position="inside">
+                <group string="Negdi Payment Settings" attrs="{'invisible': [('provider_code', '!=', 'negdi')]}">
+                    <field name="negdi_terminal_id"/>
+                    <field name="negdi_username"/>
+                    <field name="negdi_password" password="True"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
