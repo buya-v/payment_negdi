@@ -13,11 +13,11 @@
                     <field name="negdi_api_url" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'enabled')]}"/>
                 </group>
                 <group attrs="{'invisible': [('code', '!=', 'negdi'), ('state', '!=', 'test_mode')]}">
-                    <field name="negdi_test_terminal_id" attrs="{'required':[('code', '=', 'negdi')]}"/>
-                    <field name="negdi_test_username" attrs="{'required':[('code', '=', 'negdi')]}"/>
-                    <field name="negdi_test_password" attrs="{'required':[('code', '=', 'negdi')]}" password="True"/>
-                    <field name="negdi_test_return_url" attrs="{'required':[('code', '=', 'negdi')]}"/>
-                    <field name="negdi_test_api_url" attrs="{'required':[('code', '=', 'negdi')]}"/>
+                    <field name="negdi_test_terminal_id" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'test_mode')]}"/>
+                    <field name="negdi_test_username" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'test_mode')]}"/>
+                    <field name="negdi_test_password" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'test_mode')]}" password="True"/>
+                    <field name="negdi_test_return_url" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'test_mode')]}"/>
+                    <field name="negdi_test_api_url" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'test_mode')]}"/>
                 </group>
             </group>
         </field>
