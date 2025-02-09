@@ -1,16 +1,25 @@
 <odoo>
-    <record id="view_payment_provider_form_negdi" model="ir.ui.view">
-        <field name="name">Payment Provider Form (Negdi)</field>
+    <record id="view_payment_provider_form" model="ir.ui.view">
+        <field name="name">payment.provider.form.negdi</field>
         <field name="model">payment.provider</field>
-        <field name="inherit_id" ref="payment.view_payment_provider_form"/>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@name='provider_specific_options']" position="inside">
-                <group string="Negdi Payment Settings" attrs="{'invisible': [('provider_code', '!=', 'negdi')]}">
-                    <field name="negdi_terminal_id"/>
-                    <field name="negdi_username"/>
-                    <field name="negdi_password" password="True"/>
+            <group name="provider_credentials" position='inside'>
+                <group attrs="{'invisible': [('code', '!=', 'negdi'), ('state', '!=', 'enabled')]}">
+                    <field name="negdi_terminal_id" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'enabled')]}"/>
+                    <field name="negdi_username" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'enabled')]}"/>
+                    <field name="negdi_password" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'enabled')]}" password="True"/>
+                    <field name="negdi_return_url" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'enabled')]}"/>
+                    <field name="negdi_api_url" attrs="{'required':[('code', '=', 'negdi'), ('state', '=', 'enabled')]}"/>
                 </group>
-            </xpath>
+                <group attrs="{'invisible': [('code', '!=', 'negdi'), ('state', '!=', 'test_mode')]}">
+                    <field name="negdi_test_terminal_id" attrs="{'required':[('code', '=', 'negdi')]}"/>
+                    <field name="negdi_test_username" attrs="{'required':[('code', '=', 'negdi')]}"/>
+                    <field name="negdi_test_password" attrs="{'required':[('code', '=', 'negdi')]}" password="True"/>
+                    <field name="negdi_test_return_url" attrs="{'required':[('code', '=', 'negdi')]}"/>
+                    <field name="negdi_test_api_url" attrs="{'required':[('code', '=', 'negdi')]}"/>
+                </group>
+            </group>
         </field>
     </record>
 </odoo>

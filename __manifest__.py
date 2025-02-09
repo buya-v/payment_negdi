@@ -1,7 +1,7 @@
 {
-    'name': 'Negdi Payment Provider',
+    'name': 'NEGDi Payment Provider',
     'version': '1.0',
-    'summary': 'Negdi Payment Gateway Integration',
+    'summary': 'NEGDi Payment Gateway Integration with Odoo',
     'description': """
         Provides integration with the Negdi payment gateway.
     """,
@@ -10,7 +10,7 @@
     'depends': ['payment'],
     'data': [
         'views/payment_provider_views.xml',
-        # 'data/payment_provider_data.xml',  # Optional - for default config
+        'data/payment_provider_data.xml',  # Optional - for default config
     ],
     'installable': True,
     'license': 'LGPL-3',  # Or your preferred license
