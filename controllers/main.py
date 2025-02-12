@@ -1,47 +1,19 @@
 from odoo import http
 from odoo.http import request
-import logging
-
-_logger = logging.getLogger(__name__)
 
 class NegdiController(http.Controller):
 
-    @http.route('/payment/negdi/webhook', type='json', auth='public', methods=['POST'])
-    def negdi_webhook(self):
-        """Endpoint to handle NEGDI webhook notifications."""
-        data = request.jsonrequest
-        _logger.info("NEGDI Webhook received data: %s", data)
+    @http.route('/payment/negdi/feedback', type='http', auth='public', methods=['GET', 'POST'], csrf=False)
+    def negdi_feedback(self, **post):
+        """
+        Example feedback route for handling notifications from NEGDi (not implemented).
+        """
+        # In a real implementation, you would:
+        # 1. Validate the data from NEGDi (check signatures, etc.)
+        # 2. Update the corresponding payment.transaction record in Odoo.
+        # 3. Redirect the user to a success or failure page.
 
-        # Find the transaction
-        tranid = data.get('order', {}).get('tranid')
-        transaction = request.env['payment.transaction'].sudo().search([('negdi_tranid', '=', tranid)], limit=1)
-
-        if not transaction:
-            _logger.warning("NEGDI Webhook: Transaction not found for tranid %s", tranid)
-            return {'success': False, 'message': 'Transaction not found'}
-
-        try:
-            transaction._process_feedback_data(data)
-            return {'success': True}
-        except Exception as e:
-            _logger.exception("NEGDI Webhook: Error processing data: %s", e)
-            return {'success': False, 'message': str(e)}
-
-    @http.route('/payment/negdi/return', auth='public', methods=['GET', 'POST'], csrf=False)
-    def negdi_return(self, **post):
-        """Endpoint to handle NEGDI return."""
-        _logger.info("NEGDI Return URL called with data: %s", post)
-
-        tranid = post.get('tranid')
-        transaction = request.env['payment.transaction'].sudo().search([('negdi_tranid', '=', tranid)], limit=1)
-
-        if not transaction:
-            _logger.warning("NEGDI Return: Transaction not found for tranid %s", tranid)
-            return 'Transaction not found'
-
-        try:
-            transaction._process_feedback_data(post)
-            return request.redirect('/payment/status')
-        except Exception as e:
-            _logger.exception("NEGDI Return: Error processing data: %s", e)
-            return 'Error processing data'
+        request.env['payment.transaction'].sudo()._logger.info(
+            "NEGDi: Received feedback data: %s", post
+        )
+        return "NEGDi Feedback Received (Demo)"  # Replace with a proper redirect

@@ -6,14 +6,8 @@
             <field name="inherit_id" ref="payment.payment_provider_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//group[@name='provider_credentials']" position="after">
-                    <group string="NEGDI Configuration" attrs="{'invisible': [('code', '!=', 'negdi')]}">
-                        <field name="negdi_terminal_id"/>
-                        <field name="negdi_username"/>
-                        <field name="negdi_password" password="True"/>
-                         <field name="negdi_public_key"/>
-                         <field name="negdi_test_url"/>
-                         <field name="negdi_prod_url"/>
-                        <field name="negdi_webhook_url" readonly="1"/>
+                    <group string="NEGDI (Demo) Configuration" attrs="{'invisible': [('code', '!=', 'negdi')]}">
+                        <!-- <field name="negdi_dummy_field"/> -->
                     </group>
                 </xpath>
             </field>

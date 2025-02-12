@@ -1,13 +1,10 @@
 <odoo>
     <data noupdate="1">
         <record id="payment_acquirer_negdi" model="payment.provider">
-            <field name="name">NEGDi</field>
+            <field name="name">NEGDI (Demo)</field>
             <field name="code">negdi</field>
-            <field name="sequence">20</field>
+            <field name="sequence">30</field>
             <field name="state">test</field>
-            <field name="negdi_terminal_id">1</field>
-            <field name="negdi_username">user</field>
-            <field name="negdi_password">1234</field>
         </record>
     </data>
 </odoo>
