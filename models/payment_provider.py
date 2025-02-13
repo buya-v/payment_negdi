@@ -1,46 +1,36 @@
-from odoo import api, fields, models, _
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
+
 
 class PaymentProvider(models.Model):
     _inherit = 'payment.provider'
 
-    code = fields.Selection(
-        selection_add=[('negdi', 'NEGDI (Demo)')],
-        ondelete={'negdi': 'set default'}
-    )
-    # negdi_dummy_field = fields.Char(string='Dummy NEGDI Field', required_if_provider='negdi')
+    code = fields.Selection(selection_add=[('negdi', 'NEGDi')], ondelete={'negdi': 'set default'})
 
-    def _get_default_payment_method_id(self, provider_code=None):
-        self.ensure_one()
-        if self.code != 'negdi':
-            return super()._get_default_payment_method_id(provider_code)
-        return self.env.ref('payment.payment_method_manual').id  # Or card, if you prefer
+    #=== COMPUTE METHODS ===#
 
-    def _get_supported_currencies(self):
-        """ Hook for sub-modules to implement.
-        :return: A set of supported currency names.
-        :rtype: set
+    @api.depends('code')
+    def _compute_view_configuration_fields(self):
+        """ Override of payment to hide the credentials page.
+
+        :return: None
         """
-        res = super()._get_supported_currencies()
-        return res | {'MNT'} # Adding MNT currency to the base
+        super()._compute_view_configuration_fields()
+        self.filtered(lambda p: p.code == 'negdi').show_credentials_page = False
 
-    def _get_validation_supported_fields(self):
-        """ Hook for sub-modules to implement. """
-        return super()._get_validation_supported_fields() + [
-            'cc_number', 'cc_expiry', 'cc_holder_name', 'cc_cvc'
-        ]
+    def _compute_feature_support_fields(self):
+        """ Override of `payment` to enable additional features. """
+        super()._compute_feature_support_fields()
+        self.filtered(lambda p: p.code == 'negdi').update({
+            'support_fees': True,
+            'support_manual_capture': True,
+            'support_refund': 'partial',
+            'support_tokenization': True,
+        })
 
-    def _get_payment_methods_mapping(self):
-        """ Hook for sub-modules to implement. """
-        return {
-            'card': 'card',
-        }
+    # === CONSTRAINT METHODS ===#
 
-    def _get_compatible_payment_methods(self, invoice=None, currency=None, country=None):
-        """ Hook for sub-modules to implement. """
-        self.ensure_one()
-        payment_methods = super()._get_compatible_payment_methods(invoice=invoice, currency=currency, country=country)
-        if self.code != 'negdi':
-            return payment_methods
-
-        payment_methods = payment_methods.filtered(lambda pm: pm.code == 'manual')
-        return payment_methods
+    @api.constrains('state', 'code')
+    def _check_provider_state(self):
+        if self.filtered(lambda p: p.code == 'negdi' and p.state not in ('test', 'disabled')):
+            raise UserError(_("Demo providers should never be enabled."))
