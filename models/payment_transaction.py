@@ -206,7 +206,7 @@ class PaymentTransaction(models.Model):
             'partner_id': self.partner_id.id,
             'provider_ref': 'fake provider reference',
             'verified': True,
-            'demo_simulated_state': state,
+            'negdi_simulated_state': state,
         })
         self.write({
             'token_id': token,

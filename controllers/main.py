@@ -6,7 +6,7 @@ class PaymentNegdiController(http.Controller):
     _simulation_url = '/payment/negdi/simulate_payment'
 
     @http.route(_simulation_url, type='json', auth='public')
-    def demo_simulate_payment(self, **data):
+    def negdi_simulate_payment(self, **data):
         """ Simulate the response of a payment request.
 
         :param dict data: The simulated notification data.

@@ -23,7 +23,7 @@ class PaymentToken(models.Model):
         :param list args: The arguments passed by QWeb when calling this method.
         :param bool should_pad: Whether the token should be padded or not.
         :param dict kwargs: Optional data.
-        :return: The demo token name.
+        :return: The negdi token name.
         :rtype: str
         """
         if self.provider_code != 'negdi':
