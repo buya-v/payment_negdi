@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Activate the virtual environment
-source /Users/buyanmunkhvolodya/odoo16/odoo-venv/bin/activate
+# source ~/odoo16/venv/bin/activate
 
 # Navigate to the Odoo directory
-cd /Users/buyanmunkhvolodya/odoo_development/odoo16/custom_addons/payment_negdi
+# cd ~/odoo16/custom_addons/payment_negdi
 
 # Run the Odoo server with the configuration file
-~/odoo16/odoo-bin -c odoo.conf -u payment_negdi --dev=reload
+~/odoo16/venv/bin/python3 ~/odoo16/odoo/odoo-bin -c odoo.conf -u payment_negdi --dev=reload
