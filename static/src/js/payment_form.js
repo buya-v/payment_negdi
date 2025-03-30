@@ -1,64 +1,29 @@
-odoo.define('payment_negdi.payment_form', require => {
-    'use strict';
+odoo.define('payment_negdi.payment_form', function (require) {
+    "use strict";
 
-    const checkoutForm = require('payment.checkout_form');
-    const manageForm = require('payment.manage_form');
+    var PaymentForm = require('payment.payment_form');
+    var core = require('web.core');
 
-    const paymentNegdiMixin = {
-
-        //--------------------------------------------------------------------------
-        // Private
-        //--------------------------------------------------------------------------
-
+    var _t = core._t;
+    PaymentForm.include({
         /**
-         * Simulate a feedback from a payment provider and redirect the customer to the status page.
-         *
-         * @override method from payment.payment_form_mixin
-         * @private
-         * @param {string} code - The code of the provider
-         * @param {number} providerId - The id of the provider handling the transaction
-         * @param {object} processingValues - The processing values of the transaction
-         * @return {Promise}
+         * @override
+         * @param {string} providerCode
+         * @param {jQuery} $paymentOption
+         * @param {string} txContext
          */
-        _processDirectPayment: function (code, providerId, processingValues) {
-            if (code !== 'negdi') {
-                return this._super(...arguments);
-            }
-
-            const customerInput = document.getElementById('customer_input').value;
-            const simulatedPaymentState = document.getElementById('simulated_payment_state').value;
-            return this._rpc({
-                route: '/payment/negdi/simulate_payment',
-                params: {
-                    'reference': processingValues.reference,
-                    'payment_details': customerInput,
-                    'simulated_state': simulatedPaymentState,
-                },
-            }).then(() => {
-                window.location = '/payment/status';
-            });
+        willStart: function () {
+            var self = this;
+            return this._super.apply(this, arguments);
         },
 
-        /**
-         * Prepare the inline form of Negdi for direct payment.
-         *
-         * @override method from payment.payment_form_mixin
-         * @private
-         * @param {string} code - The code of the selected payment option's provider
-         * @param {integer} paymentOptionId - The id of the selected payment option
-         * @param {string} flow - The online payment flow of the selected payment option
-         * @return {Promise}
-         */
-        _prepareInlineForm: function (code, paymentOptionId, flow) {
-            if (code !== 'negdi') {
-                return this._super(...arguments);
-            } else if (flow === 'token') {
-                return Promise.resolve();
+        _createInlineForm: function (providerCode, paymentOptionId, txContext) {
+            if (providerCode !== 'negdi') {
+                return this._super.apply(this, arguments);
             }
-            this._setPaymentFlow('direct');
-            return Promise.resolve()
+
+            // Here we can add javascript code for when the form is negdi
+
         },
-    };
-    checkoutForm.include(paymentNegdiMixin);
-    manageForm.include(paymentNegdiMixin);
+    });
 });

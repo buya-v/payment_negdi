@@ -1,217 +1,253 @@
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 import logging
-
-from odoo import _, fields, models
-from odoo.exceptions import UserError, ValidationError
-
-from odoo.addons.payment import utils as payment_utils
+import datetime
 
 _logger = logging.getLogger(__name__)
-
 
 class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
 
-    capture_manually = fields.Boolean(related='provider_id.capture_manually')
+    negdi_tranid = fields.Char(string='NEGDI Transaction ID', help="Transaction ID from NEGDI")
+    negdi_checkid = fields.Char(string='NEGDI Check ID', help="Check ID from NEGDI")
+    negdi_order_num = fields.Char(string='NEGDI order num', help="NEGDI internal order number")
+    negdi_payment_type = fields.Selection(
+        selection=[
+            ('card', 'Card'),
+            ('token', 'Token'),
+        ],
+        string='Payment Type',
+        readonly=True
+    )
 
-    #=== ACTION METHODS ===#
+    def _get_specific_processing_values(self, processing_values):
+        """ Hook for sub-modules to implement.
+        """
+        if self.provider_code != 'negdi':
+            return super()._get_specific_processing_values(processing_values)
 
-    def action_negdi_set_done(self):
-        """ Set the state of the negdi transaction to 'done'.
+        processing_values['negdi_tranid'] = self.negdi_tranid
+        processing_values['negdi_checkid'] = self.negdi_checkid
+        return processing_values
 
-        Note: self.ensure_one()
+    def _negdi_build_request_data(self, endpoint):
+        """Build the base request data for NEGDI API calls.
 
-        :return: None
+        :param str endpoint: The API endpoint to call.
+        :return: A dictionary with the base request data.
+        :rtype: dict
         """
         self.ensure_one()
-        if self.provider_code != 'negdi':
-            return
+        provider = self.provider_id
+        data = {
+            'terminalid': provider.negdi_terminal_id,
+            'username': provider.negdi_username,
+            'password': provider.negdi_password,
+        }
+        return data
 
-        notification_data = {'reference': self.reference, 'simulated_state': 'done'}
-        self._handle_notification_data('negdi', notification_data)
+    def _negdi_create_order(self, endpoint, order_type):
+        """Create an order on NEGDI.  Handles ec1000, ec1001, ec1002.
 
-    def action_negdi_set_canceled(self):
-        """ Set the state of the negdi transaction to 'cancel'.
-
-        Note: self.ensure_one()
-
-        :return: None
+        :param str endpoint:  'ec1000', 'ec1001', or 'ec1002'
+        :param str order_type: The NEGDI order type ('3dsOrder', 'Non3dsOrder', etc.)
+        :return: The NEGDI API response.
+        :rtype: dict
         """
         self.ensure_one()
-        if self.provider_code != 'negdi':
-            return
+        provider = self.provider_id
 
-        notification_data = {'reference': self.reference, 'simulated_state': 'cancel'}
-        self._handle_notification_data('negdi', notification_data)
+        data = self._negdi_build_request_data(endpoint)
+        data.update({
+            'ordertype': order_type,
+            'amount': self.amount,
+            'currency': self.currency_id.name,
+            'returnurl': self.get_base_url() + '/payment/negdi/return',  # Update with your actual return URL
+            'ordernum': self.reference, # Use the Odoo transaction reference as the NEGDI order number
+            'description': f'Odoo Order {self.reference}',
+        })
 
-    def action_negdi_set_error(self):
-        """ Set the state of the negdi transaction to 'error'.
+        if endpoint == 'ec1001':  # Add customer info for TOKEN creation
+            data.update({
+                'customerid': self.partner_id.id or 'guest',  # Use partner ID or 'guest'
+                'customername': self.partner_id.name or 'Guest',
+            })
+        elif endpoint == 'ec1002':
+             data.update({
+                'customerid': self.partner_id.id or 'guest',  # Use partner ID or 'guest'
+                'customername': self.partner_id.name or 'Guest',
+            })
 
-        Note: self.ensure_one()
+        response = provider._negdi_make_request(endpoint, data)
+        return response
 
-        :return: None
-        """
+    def _negdi_process_order(self):
+        """Process an existing order (ec1003)."""
         self.ensure_one()
-        if self.provider_code != 'negdi':
-            return
+        provider = self.provider_id
 
-        notification_data = {'reference': self.reference, 'simulated_state': 'error'}
-        self._handle_notification_data('negdi', notification_data)
+        data = self._negdi_build_request_data('ec1003')
+        data.update({
+            'tranid': self.negdi_tranid,
+            'checkid': self.negdi_checkid,
+            'amount': self.amount,
+            'customerid': self.partner_id.id or 'guest'
+        })
 
-    #=== BUSINESS METHODS ===#
+        response = provider._negdi_make_request('ec1003', data)
+        return response
+
+    def _negdi_cancel_order(self):
+         """Cancel an order (ec1099)"""
+         self.ensure_one()
+         provider = self.provider_id
+
+         data = self._negdi_build_request_data('ec1099')
+         data.update({
+            'tranid': self.negdi_tranid,
+            'username': provider.negdi_username,
+            'password': provider.negdi_password,
+            'amount': self.amount
+         })
+         response = provider._negdi_make_request('ec1099', data)
+         return response
+
+    def _negdi_inquiry_order(self):
+         """Inquiry an order (ec1098)"""
+         self.ensure_one()
+         provider = self.provider_id
+
+         data = self._negdi_build_request_data('ec1098')
+         data.update({
+            'tranid': self.negdi_tranid,
+            'checkid': self.negdi_checkid,
+         })
+         response = provider._negdi_make_request('ec1098', data)
+         return response
+
+    def _negdi_cancel_token(self):
+         """cancel a token (ec1097)"""
+         self.ensure_one()
+         provider = self.provider_id
+
+         data = self._negdi_build_request_data('ec1097')
+         data.update({
+             'customerid': self.partner_id.id or 'guest',
+             'tokenid': self.negdi_tranid, #the documentation does not specify any token id so i use the transaction id
+         })
+         response = provider._negdi_make_request('ec1097', data)
+         return response
+
+    def _negdi_inquiry_order_type(self):
+         """inquiry order type (ec1096)"""
+         self.ensure_one()
+         provider = self.provider_id
+
+         data = self._negdi_build_request_data('ec1096')
+         response = provider._negdi_make_request('ec1096', data)
+         return response
+
+    def _process_feedback_data(self, data):
+        """Process the data received from NEGDI (webhook or return URL)."""
+        self.ensure_one()
+        provider = self.provider_id
+
+        # Verify signature
+        #if not provider._negdi_verify_signature(data.get('order', {}), data.get('ordersign')):
+        #    _logger.warning("NEGDI: Invalid signature on feedback data for transaction %s", self.reference)
+        #    self._set_error(_("NEGDI: Invalid signature on feedback data."))
+        #    return
+
+        order_data = data.get('order', {})
+        self.negdi_tranid = order_data.get('tranid')
+        self.negdi_checkid = order_data.get('checkid')
+        negdi_status = order_data.get('status')
+
+        # Map NEGDI status to Odoo states (adjust based on NEGDI documentation)
+        if negdi_status in ('Approved', 'Authorized', 'Funded', 'Fully paid'):
+            self._set_done()
+        elif negdi_status == 'Preparing':
+            self._set_pending()
+        elif negdi_status in ('Cancelled', 'Rejected', 'Refused', 'Declined'):
+            self._set_cancel()
+        else:
+            _logger.warning(f"NEGDI: Unknown status {negdi_status} for transaction {self.reference}")
+            self._set_error(f"NEGDI: Unknown status: {negdi_status}")
 
     def _send_payment_request(self):
-        """ Override of payment to simulate a payment request.
-
-        Note: self.ensure_one()
-
-        :return: None
-        """
-        super()._send_payment_request()
+        """Override to initiate the payment with NEGDI."""
+        res = super()._send_payment_request()
         if self.provider_code != 'negdi':
-            return
+            return res
 
-        if not self.token_id:
-            raise UserError("NEGDi: " + _("The transaction is not linked to a token."))
+        # Choose the NEGDI endpoint and order type based on your requirements
+        #Example create order with ec1000 and 3dsOrder type
+        try:
+            response = self._negdi_create_order('ec1000', '3dsOrder')
 
-        simulated_state = self.token_id.negdi_simulated_state
-        notification_data = {'reference': self.reference, 'simulated_state': simulated_state}
-        self._handle_notification_data('negdi', notification_data)
+            if response and response.get('order'):
+                order = response.get('order')
+                if order.get('tranid'):
+                    self.negdi_tranid = order.get('tranid')
+                    self.negdi_checkid = order.get('checkid')
+                    negdi_status = order.get('status')
 
-    def _send_refund_request(self, **kwargs):
-        """ Override of payment to simulate a refund.
+                    if negdi_status == 'Preparing' and response.get('order').get('negdiurl'):
+                        negdi_url = response.get('order').get('negdiurl')
+                        return {
+                            'type': 'ir.actions.act_url',
+                            'url': negdi_url,
+                            'target': '_self',
+                        }
+                    else:
+                        _logger.warning(f"NEGDI: Payment not in Preparing state or negdiurl not found. Status: {negdi_status}")
+                        self._set_error(_("NEGDI: Payment process error. Please check logs."))
 
-        Note: self.ensure_one()
+                else:
+                     _logger.warning(f"NEGDI: No tranid in response: {response}")
+                     self._set_error(_("NEGDI: Payment process error. Please check logs."))
 
-        :param dict kwargs: The keyword arguments.
-        :return: The refund transaction created to process the refund request.
-        :rtype: recordset of `payment.transaction`
-        """
-        refund_tx = super()._send_refund_request(**kwargs)
-        if self.provider_code != 'negdi':
-            return refund_tx
-
-        notification_data = {'reference': refund_tx.reference, 'simulated_state': 'done'}
-        refund_tx._handle_notification_data('negdi', notification_data)
-
-        return refund_tx
-
-    def _send_capture_request(self):
-        """ Override of payment to simulate a capture request.
-
-        Note: self.ensure_one()
-
-        :return: None
-        """
-        super()._send_capture_request()
-        if self.provider_code != 'negdi':
-            return
-
-        notification_data = {
-            'reference': self.reference,
-            'simulated_state': 'done',
-            'manual_capture': True,  # Distinguish manual captures from regular one-step captures.
-        }
-        self._handle_notification_data('negdi', notification_data)
-
-    def _send_void_request(self):
-        """ Override of payment to simulate a void request.
-
-        Note: self.ensure_one()
-
-        :return: None
-        """
-        super()._send_void_request()
-        if self.provider_code != 'negdi':
-            return
-
-        notification_data = {'reference': self.reference, 'simulated_state': 'cancel'}
-        self._handle_notification_data('negdi', notification_data)
-
-    def _get_tx_from_notification_data(self, provider_code, notification_data):
-        """ Override of payment to find the transaction based on dummy data.
-
-        :param str provider_code: The code of the provider that handled the transaction
-        :param dict notification_data: The dummy notification data
-        :return: The transaction if found
-        :rtype: recordset of `payment.transaction`
-        :raise: ValidationError if the data match no transaction
-        """
-        tx = super()._get_tx_from_notification_data(provider_code, notification_data)
-        if provider_code != 'negdi' or len(tx) == 1:
-            return tx
-
-        reference = notification_data.get('reference')
-        tx = self.search([('reference', '=', reference), ('provider_code', '=', 'negdi')])
-        if not tx:
-            raise ValidationError(
-                "NEGDi: " + _("No transaction found matching reference %s.", reference)
-            )
-        return tx
-
-    def _process_notification_data(self, notification_data):
-        """ Override of payment to process the transaction based on dummy data.
-
-        Note: self.ensure_one()
-
-        :param dict notification_data: The dummy notification data
-        :return: None
-        :raise: ValidationError if inconsistent data were received
-        """
-        super()._process_notification_data(notification_data)
-        if self.provider_code != 'negdi':
-            return
-
-        self.provider_reference = f'negdi-{self.reference}'
-
-        if self.tokenize:
-            # The reasons why we immediately tokenize the transaction regardless of the state rather
-            # than waiting for the payment method to be validated ('authorized' or 'done') like the
-            # other payment providers do are:
-            # - To save the simulated state and payment details on the token while we have them.
-            # - To allow customers to create tokens whose transactions will always end up in the
-            #   said simulated state.
-            self._negdi_tokenize_from_notification_data(notification_data)
-
-        state = notification_data['simulated_state']
-        if state == 'pending':
-            self._set_pending()
-        elif state == 'done':
-            if self.capture_manually and not notification_data.get('manual_capture'):
-                self._set_authorized()
             else:
-                self._set_done()
-                # Immediately post-process the transaction if it is a refund, as the post-processing
-                # will not be triggered by a customer browsing the transaction from the portal.
-                if self.operation == 'refund':
-                    self.env.ref('payment.cron_post_process_payment_tx')._trigger()
-        elif state == 'cancel':
-            self._set_canceled()
-        else:  # Simulate an error state.
-            self._set_error(_("You selected the following negdi payment status: %s", state))
+                 _logger.warning(f"NEGDI: No response from NEGDI API: {response}")
+                 self._set_error(_("NEGDI: No response from NEGDI API."))
 
-    def _negdi_tokenize_from_notification_data(self, notification_data):
-        """ Create a new token based on the notification data.
+        except Exception as e:
+            _logger.exception("NEGDI: Error creating order: %s", str(e))
+            self._set_error(_("NEGDI: Error creating order: %s") % str(e))
 
-        Note: self.ensure_one()
+        return res
 
-        :param dict notification_data: The fake notification data to tokenize from.
-        :return: None
-        """
-        self.ensure_one()
+    def _process_s2s_digital_payment(self, processing_values):
+        """Override to process the payment with NEGDI."""
+        res = super()._process_s2s_digital_payment(processing_values)
+        if self.provider_code != 'negdi':
+            return res
 
-        state = notification_data['simulated_state']
-        token = self.env['payment.token'].create({
-            'provider_id': self.provider_id.id,
-            'payment_details': notification_data['payment_details'],
-            'partner_id': self.partner_id.id,
-            'provider_ref': 'fake provider reference',
-            'verified': True,
-            'negdi_simulated_state': state,
-        })
-        self.write({
-            'token_id': token,
-            'tokenize': False,
-        })
-        _logger.info(
-            "Created token with id %s for partner with id %s.", token.id, self.partner_id.id
-        )
+        try:
+            response = self._negdi_process_order()
+            if response and response.get('order'):
+                order = response.get('order')
+                negdi_status = order.get('status')
+
+                if negdi_status in ('Approved', 'Authorized', 'Funded', 'Fully paid'):
+                   self._set_done()
+                else:
+                    _logger.warning(f"NEGDI: Payment failed with status: {negdi_status}")
+                    self._set_error(f"NEGDI: Payment failed with status: {negdi_status}")
+            else:
+                 _logger.warning(f"NEGDI: No response from NEGDI API: {response}")
+                 self._set_error(_("NEGDI: No response from NEGDI API."))
+
+        except Exception as e:
+            _logger.exception("NEGDI: Error processing order: %s", str(e))
+            self._set_error(_("NEGDI: Error processing order: %s") % str(e))
+
+        return res
+
+    @api.model
+    def _get_available_providers(self, company=None, mode=None, currency_id=None, invoice=None):
+        """ Hook for sub-modules to implement. """
+        providers = super()._get_available_providers(company=company, mode=mode, currency_id=currency_id, invoice=invoice)
+        if not company:
+            company = self.env.company
+        return providers

@@ -1,0 +1,17 @@
+<odoo>
+    <data>
+        <record id="payment_transaction_view_form_negdi" model="ir.ui.view">
+            <field name="name">NEGDi Transaction Form</field>
+            <field name="model">payment.transaction</field>
+            <field name="inherit_id" ref="payment.payment_transaction_form"/>
+            <field name="arch" type="xml">
+                <group name="transaction_details" position='inside'>
+                    <field name="negdi_tranid" invisible="provider_code != 'negdi'"/>
+                    <field name="negdi_checkid" invisible="provider_code != 'negdi'"/>
+                    <field name="negdi_order_num" invisible="provider_code != 'negdi'"/>
+                    <field name="negdi_payment_type" invisible="provider_code != 'negdi'"/>
+                </group>
+            </field>
+        </record>
+    </data>
+</odoo>
