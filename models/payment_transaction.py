@@ -3,8 +3,6 @@ from odoo.exceptions import UserError
 import logging
 import datetime
 from werkzeug import urls
-from . import const
-from . import NegdiController
 
 _logger = logging.getLogger(__name__)
 

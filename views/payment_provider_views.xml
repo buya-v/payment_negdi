@@ -11,9 +11,7 @@
                         <field name="negdi_username" required="code == 'negdi' and state != 'disabled'"/>
                         <field name="negdi_password" required="code == 'negdi' and state != 'disabled'" password="True"/>
                         <field name="negdi_public_key" required="code == 'negdi' and state != 'disabled'"/>
-                        <field name="negdi_test_url" required="code == 'negdi' and state != 'disabled'"/>
-                        <field name="negdi_prod_url" required="code == 'negdi' and state != 'disabled'"/>
-                        <field name="negdi_webhook_url" readonly="1"/>
+                        
                     </group>
                 </group>
             </field>
