@@ -2,6 +2,9 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 import logging
 import datetime
+from werkzeug import urls
+from . import const
+from . import NegdiController
 
 _logger = logging.getLogger(__name__)
 
@@ -46,10 +49,9 @@ class PaymentTransaction(models.Model):
         }
         return data
 
-    def _negdi_create_order(self, endpoint, order_type):
+    def _negdi_create_order(self, order_type):
         """Create an order on NEGDI.  Handles ec1000, ec1001, ec1002.
 
-        :param str endpoint:  'ec1000', 'ec1001', or 'ec1002'
         :param str order_type: The NEGDI order type ('3dsOrder', 'Non3dsOrder', etc.)
         :return: The NEGDI API response.
         :rtype: dict
@@ -57,12 +59,14 @@ class PaymentTransaction(models.Model):
         self.ensure_one()
         provider = self.provider_id
 
+        api_url = provider._get_negdi_api_url()  # Get the API URL from the provider
+        endpoint = const.API_ENDPOINT_CREATE_ORDER
         data = self._negdi_build_request_data(endpoint)
         data.update({
             'ordertype': order_type,
             'amount': self.amount,
             'currency': self.currency_id.name,
-            'returnurl': self.get_base_url() + '/payment/negdi/return',  # Update with your actual return URL
+            'returnurl': self.get_base_url() + NegdiController._return_url,  # Update with your actual return URL
             'ordernum': self.reference, # Use the Odoo transaction reference as the NEGDI order number
             'description': f'Odoo Order {self.reference}',
         })
@@ -86,7 +90,9 @@ class PaymentTransaction(models.Model):
         self.ensure_one()
         provider = self.provider_id
 
-        data = self._negdi_build_request_data('ec1003')
+        api_url = provider._get_negdi_api_url() #Get the API URL from the provider
+        endpoint = const.API_ENDPOINT_PROCESS_ORDER
+        data = self._negdi_build_request_data(endpoint)
         data.update({
             'tranid': self.negdi_tranid,
             'checkid': self.negdi_checkid,
@@ -94,7 +100,7 @@ class PaymentTransaction(models.Model):
             'customerid': self.partner_id.id or 'guest'
         })
 
-        response = provider._negdi_make_request('ec1003', data)
+        response = provider._negdi_make_request(endpoint, data)
         return response
 
     def _negdi_cancel_order(self):
@@ -102,14 +108,16 @@ class PaymentTransaction(models.Model):
          self.ensure_one()
          provider = self.provider_id
 
-         data = self._negdi_build_request_data('ec1099')
+         api_url = provider._get_negdi_api_url() #Get the API URL from the provider
+         endpoint = const.API_ENDPOINT_CANCEL_ORDER
+         data = self._negdi_build_request_data(endpoint)
          data.update({
             'tranid': self.negdi_tranid,
             'username': provider.negdi_username,
             'password': provider.negdi_password,
             'amount': self.amount
          })
-         response = provider._negdi_make_request('ec1099', data)
+         response = provider._negdi_make_request(endpoint, data)
          return response
 
     def _negdi_inquiry_order(self):
@@ -117,12 +125,14 @@ class PaymentTransaction(models.Model):
          self.ensure_one()
          provider = self.provider_id
 
-         data = self._negdi_build_request_data('ec1098')
+         api_url = provider._get_negdi_api_url() #Get the API URL from the provider
+         endpoint = const.API_ENDPOINT_INQUIRY_ORDER
+         data = self._negdi_build_request_data(endpoint)
          data.update({
             'tranid': self.negdi_tranid,
             'checkid': self.negdi_checkid,
          })
-         response = provider._negdi_make_request('ec1098', data)
+         response = provider._negdi_make_request(endpoint, data)
          return response
 
     def _negdi_cancel_token(self):
@@ -130,12 +140,14 @@ class PaymentTransaction(models.Model):
          self.ensure_one()
          provider = self.provider_id
 
-         data = self._negdi_build_request_data('ec1097')
+         api_url = provider._get_negdi_api_url() #Get the API URL from the provider
+         endpoint = const.API_ENDPOINT_CANCEL_TOKEN
+         data = self._negdi_build_request_data(endpoint)
          data.update({
              'customerid': self.partner_id.id or 'guest',
              'tokenid': self.negdi_tranid, #the documentation does not specify any token id so i use the transaction id
          })
-         response = provider._negdi_make_request('ec1097', data)
+         response = provider._negdi_make_request(endpoint, data)
          return response
 
     def _negdi_inquiry_order_type(self):
@@ -143,36 +155,11 @@ class PaymentTransaction(models.Model):
          self.ensure_one()
          provider = self.provider_id
 
-         data = self._negdi_build_request_data('ec1096')
-         response = provider._negdi_make_request('ec1096', data)
+         api_url = provider._get_negdi_api_url() #Get the API URL from the provider
+         endpoint = const.API_ENDPOINT_INQUIRY_ORDER_TYPE
+         data = self._negdi_build_request_data(endpoint)
+         response = provider._negdi_make_request(endpoint, data)
          return response
-
-    def _process_feedback_data(self, data):
-        """Process the data received from NEGDI (webhook or return URL)."""
-        self.ensure_one()
-        provider = self.provider_id
-
-        # Verify signature
-        #if not provider._negdi_verify_signature(data.get('order', {}), data.get('ordersign')):
-        #    _logger.warning("NEGDI: Invalid signature on feedback data for transaction %s", self.reference)
-        #    self._set_error(_("NEGDI: Invalid signature on feedback data."))
-        #    return
-
-        order_data = data.get('order', {})
-        self.negdi_tranid = order_data.get('tranid')
-        self.negdi_checkid = order_data.get('checkid')
-        negdi_status = order_data.get('status')
-
-        # Map NEGDI status to Odoo states (adjust based on NEGDI documentation)
-        if negdi_status in ('Approved', 'Authorized', 'Funded', 'Fully paid'):
-            self._set_done()
-        elif negdi_status == 'Preparing':
-            self._set_pending()
-        elif negdi_status in ('Cancelled', 'Rejected', 'Refused', 'Declined'):
-            self._set_cancel()
-        else:
-            _logger.warning(f"NEGDI: Unknown status {negdi_status} for transaction {self.reference}")
-            self._set_error(f"NEGDI: Unknown status: {negdi_status}")
 
     def _send_payment_request(self):
         """Override to initiate the payment with NEGDI."""
@@ -183,7 +170,7 @@ class PaymentTransaction(models.Model):
         # Choose the NEGDI endpoint and order type based on your requirements
         #Example create order with ec1000 and 3dsOrder type
         try:
-            response = self._negdi_create_order('ec1000', '3dsOrder')
+            response = self._negdi_create_order(const.ORDER_TYPE_3DS)
 
             if response and response.get('order'):
                 order = response.get('order')
