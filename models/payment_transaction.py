@@ -3,6 +3,8 @@ from odoo.exceptions import UserError
 import logging
 import datetime
 from werkzeug import urls
+from . import const
+from controllers import NegdiController
 
 _logger = logging.getLogger(__name__)
 
@@ -228,6 +230,25 @@ class PaymentTransaction(models.Model):
             self._set_error(_("NEGDI: Error processing order: %s") % str(e))
 
         return res
+
+    def _negdi_make_request(self, endpoint, data=None):
+        """ Make a request to the NEGDI API. """
+        import requests
+        import json
+
+        url = self._get_negdi_api_url() + endpoint  # Use the centralized URL method
+        headers = {
+            'Content-Type': 'application/json'
+        }
+        try:
+            _logger.info("NEGDI Request URL: %s", url)
+            _logger.info("NEGDI Request Data: %s", data)
+            response = requests.post(url, headers=headers, data=json.dumps(data), timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            _logger.exception("NEGDI API Error: %s", str(e))
+            raise UserError(_("NEGDI API Error: %s") % str(e))
 
     @api.model
     def _get_available_providers(self, company=None, mode=None, currency_id=None, invoice=None):
