@@ -1,29 +1,53 @@
-odoo.define('payment_negdi.payment_form', function (require) {
-    "use strict";
+/** @odoo-module **/
 
-    var PaymentForm = require('payment.payment_form');
-    var core = require('web.core');
+import paymentForm from '@payment/js/payment_form';
+import paymentNEGDiMixin from '@payment_negdi/js/payment_negdi_mixin';
 
-    var _t = core._t;
-    PaymentForm.include({
-        /**
-         * @override
-         * @param {string} providerCode
-         * @param {jQuery} $paymentOption
-         * @param {string} txContext
-         */
-        willStart: function () {
-            var self = this;
-            return this._super.apply(this, arguments);
-        },
+paymentForm.include({
 
-        _createInlineForm: function (providerCode, paymentOptionId, txContext) {
-            if (providerCode !== 'negdi') {
-                return this._super.apply(this, arguments);
-            }
+    // #=== DOM MANIPULATION ===#
 
-            // Here we can add javascript code for when the form is negdi
+    /**
+     * Prepare the inline form of NEGDi for direct payment.
+     *
+     * @override method from @payment/js/payment_form
+     * @private
+     * @param {number} providerId - The id of the selected payment option's provider.
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The online payment flow of the selected payment option.
+     * @return {void}
+     */
+    async _prepareInlineForm(providerId, providerCode, paymentOptionId, paymentMethodCode, flow) {
+        if (providerCode !== 'negdi') {
+            this._super(...arguments);
+            return;
+        } else if (flow === 'token') {
+            return;
+        }
+        this._setPaymentFlow('direct');
+    },
 
-        },
-    });
+    // #=== PAYMENT FLOW ===#
+
+    /**
+     * Simulate a feedback from a payment provider and redirect the customer to the status page.
+     *
+     * @override method from payment.payment_form
+     * @private
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option.
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {object} processingValues - The processing values of the transaction.
+     * @return {void}
+     */
+    async _processDirectFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {
+        if (providerCode !== 'negdi') {
+            this._super(...arguments);
+            return;
+        }
+        paymentNEGDiMixin.processNEGDiPayment(processingValues);
+    },
+
 });
