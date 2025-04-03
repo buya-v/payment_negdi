@@ -173,3 +173,5 @@ cython_debug/
 # local conf and start script
 odoo.conf
 start_odoo.sh
+
+.DS_Store
