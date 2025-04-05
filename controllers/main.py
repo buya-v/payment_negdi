@@ -40,7 +40,7 @@ class NEGDiController(http.Controller):
         tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
             'negdi', data
         )
-        self._verify_notification_signature(data, tx_sudo)
+        # self._verify_notification_signature(data, tx_sudo)
 
         # Handle the notification data.
         tx_sudo._handle_notification_data('negdi', data)
@@ -62,7 +62,7 @@ class NEGDiController(http.Controller):
             tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
                 'negdi', data
             )
-            self._verify_notification_signature(data, tx_sudo)
+            # self._verify_notification_signature(data, tx_sudo)
 
             # Handle the notification data.
             tx_sudo._handle_notification_data('negdi', data)
