@@ -1,102 +1,72 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from unittest.mock import patch
-
 from odoo.tests import tagged
 from odoo.tools import mute_logger
 
-from odoo.addons.payment_negdi.tests.common import PaymentNEGDiCommon
-from odoo.addons.payment.tests.http_common import PaymentHttpCommon
+from odoo.addons.payment import utils as payment_utils
+from odoo.addons.payment_negdi.controllers.main import NEGDiController
+from odoo.addons.payment_negdi.tests.common import NEGDiCommon
 
 
-@tagged('-at_install', 'post_install')
-class TestPaymentTransaction(PaymentNEGDiCommon, PaymentHttpCommon):
+@tagged('post_install', '-at_install')
+class TestPaymentTransaction(NEGDiCommon):
 
-    def test_processing_notification_data_sets_transaction_pending(self):
-        """ Test that the transaction state is set to 'pending' when the notification data indicate
-        a pending payment. """
-        tx = self._create_transaction('direct')
-        tx._process_notification_data(dict(self.notification_data, simulated_state='pending'))
-        self.assertEqual(tx.state, 'pending')
+    def test_reference_contains_only_valid_characters(self):
+        """ Test that transaction references are made of only alphanumerics and/or '-' and '_'. """
+        for prefix in (None, '', 'S0001', 'INV/20222/001', 'dummy ref'):
+            reference = self.env['payment.transaction']._compute_reference('negdi', prefix=prefix)
+            self.assertRegex(reference, r'^[\w-]+$')
 
-    def test_processing_notification_data_authorizes_transaction(self):
-        """ Test that the transaction state is set to 'authorize' when the notification data
-        indicate a successful payment and manual capture is enabled. """
-        self.provider.capture_manually = True
-        tx = self._create_transaction('direct')
-        tx._process_notification_data(self.notification_data)
-        self.assertEqual(tx.state, 'authorized')
+    def test_no_item_missing_from_rendering_values(self):
+        """ Test that the rendered values are conform to the transaction fields. """
+        self.env['ir.config_parameter'].set_param('web.base.url', 'http://127.0.0.1:8069')
+        self.patch(self, 'base_url', lambda: 'http://127.0.0.1:8069')
+
+        tx = self._create_transaction(flow='redirect')
+
+        converted_amount = payment_utils.to_minor_currency_units(self.amount, self.currency)
+        expected_values = {
+            'command': 'PURCHASE',
+            'access_code': self.provider.negdi_access_code,
+            'merchant_identifier': self.provider.negdi_merchant_identifier,
+            'merchant_reference': tx.reference,
+            'payment_option': 'UNKNOWN',
+            'amount': str(converted_amount),
+            'currency': self.currency.name,
+            'language': tx.partner_lang[:2],
+            'customer_email': tx.partner_id.email_normalized,
+            'return_url': self._build_url(NEGDiController._return_url),
+            'signature': 'c9b9f35a607606c045f8882e762a4a4a35572cf230fe1cd45fa18d7c8681aeb9',
+            'api_url': self.provider._negdi_get_api_url(),
+        }
+        self.assertEqual(tx._get_specific_rendering_values(None), expected_values)
+
+    @mute_logger('odoo.addons.payment.models.payment_transaction')
+    def test_no_input_missing_from_redirect_form(self):
+        """ Test that the no key is not omitted from the rendering values. """
+        tx = self._create_transaction(flow='redirect')
+        expected_input_keys = [
+            'command',
+            'access_code',
+            'merchant_identifier',
+            'merchant_reference',
+            'amount',
+            'currency',
+            'language',
+            'customer_email',
+            'signature',
+            'payment_option',
+            'return_url',
+        ]
+        processing_values = tx._get_processing_values()
+        form_info = self._extract_values_from_html_form(processing_values['redirect_form_html'])
+        self.assertEqual(form_info['action'], 'https://sbcheckout.payfort.com/FortAPI/paymentPage')
+        self.assertEqual(form_info['method'], 'post')
+        self.assertListEqual(list(form_info['inputs'].keys()), expected_input_keys)
 
     def test_processing_notification_data_confirms_transaction(self):
         """ Test that the transaction state is set to 'done' when the notification data indicate a
         successful payment. """
-        tx = self._create_transaction('direct')
+        tx = self._create_transaction(flow='redirect')
         tx._process_notification_data(self.notification_data)
         self.assertEqual(tx.state, 'done')
-
-    def test_processing_notification_data_cancels_transaction(self):
-        """ Test that the transaction state is set to 'cancel' when the notification data indicate
-        an unsuccessful payment. """
-        tx = self._create_transaction('direct')
-        tx._process_notification_data(dict(self.notification_data, simulated_state='cancel'))
-        self.assertEqual(tx.state, 'cancel')
-
-    def test_processing_notification_data_sets_transaction_in_error(self):
-        """ Test that the transaction state is set to 'error' when the notification data indicate
-        an error during the payment. """
-        tx = self._create_transaction('direct')
-        tx._process_notification_data(dict(self.notification_data, simulated_state='error'))
-        self.assertEqual(tx.state, 'error')
-
-    def test_processing_notification_data_tokenizes_transaction(self):
-        """ Test that the transaction is tokenized when it was requested and the notification data
-        include token data. """
-        tx = self._create_transaction('direct', tokenize=True)
-        with patch(
-            'odoo.addons.payment_negdi.models.payment_transaction.PaymentTransaction'
-            '._negdi_tokenize_from_notification_data'
-        ) as tokenize_mock:
-            tx._process_notification_data(self.notification_data)
-        self.assertEqual(tokenize_mock.call_count, 1)
-
-    @mute_logger('odoo.addons.payment_negdi.models.payment_transaction')
-    def test_processing_notification_data_propagates_simulated_state_to_token(self):
-        """ Test that the simulated state of the notification data is set on the token when
-        processing notification data. """
-        for counter, state in enumerate(['pending', 'done', 'cancel', 'error']):
-            tx = self._create_transaction(
-                'direct', reference=f'{self.reference}-{counter}', tokenize=True
-            )
-            tx._process_notification_data(dict(self.notification_data, simulated_state=state))
-            self.assertEqual(tx.token_id.negdi_simulated_state, state)
-
-    def test_making_a_payment_request_propagates_token_simulated_state_to_transaction(self):
-        """ Test that the simulated state of the token is set on the transaction when making a
-        payment request. """
-        for counter, state in enumerate(['pending', 'done', 'cancel', 'error']):
-            tx = self._create_transaction(
-                'direct', reference=f'{self.reference}-{counter}'
-            )
-            tx.token_id = self._create_token(negdi_simulated_state=state)
-            tx._send_payment_request()
-            self.assertEqual(tx.state, tx.token_id.negdi_simulated_state)
-
-    def test_send_full_capture_request_does_not_create_capture_tx(self):
-        self.provider.capture_manually = True
-        source_tx = self._create_transaction(flow='direct', state='authorized')
-        child_tx = source_tx._send_capture_request()
-        self.assertFalse(
-            child_tx, msg="Full capture should not create a child transaction."
-        )
-
-    def test_send_partial_capture_request_creates_capture_tx(self):
-        self.provider.capture_manually = True
-        source_tx = self._create_transaction(flow='direct', state='authorized')
-        child_tx = source_tx._send_capture_request(amount_to_capture=10)
-        self.assertTrue(
-            source_tx.child_transaction_ids,
-            msg="Partial capture should create a child transaction and linked it to the source tx.",
-        )
-        self.assertEqual(
-            child_tx.amount, 10, msg="Child transaction should have the requested amount."
-        )

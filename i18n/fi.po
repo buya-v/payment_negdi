@@ -3,21 +3,17 @@
 # 	* payment_negdi
 # 
 # Translators:
-# Tuomo Aura <tuomo.aura@web-veistamo.fi>, 2024
-# Kari Lindgren <kari.lindgren@emsystems.fi>, 2024
-# Miika Nissi <miika.nissi@tawasta.fi>, 2024
-# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
-# Martin Trigaux, 2024
 # Veikko Väätäjä <veikko.vaataja@gmail.com>, 2024
-# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025
+# Jarmo Kortetjärvi <jarmo.kortetjarvi@gmail.com>, 2024
+# Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"POT-Creation-Date: 2023-10-26 21:56+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
-"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2025\n"
+"Last-Translator: Ossi Mantylahti <ossi.mantylahti@obs-solutions.fi>, 2024\n"
 "Language-Team: Finnish (https://app.transifex.com/odoo/teams/41243/fi/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -26,118 +22,34 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid ""
-"<select id=\"simulated_payment_state\" class=\"form-select\">\n"
-"                    <option value=\"done\" title=\"Successful payment\">\n"
-"                        Successful\n"
-"                    </option>\n"
-"                    <option value=\"pending\" title=\"Payment processing\">\n"
-"                        Pending\n"
-"                    </option>\n"
-"                    <option value=\"cancel\" title=\"Payment cancelled by customer\">\n"
-"                        Cancelled\n"
-"                    </option>\n"
-"                    <option value=\"error\" title=\"Processing error\">\n"
-"                        Error\n"
-"                    </option>\n"
-"                </select>"
-msgstr ""
-"<select id=\"simulated_payment_state\" class=\"form-select\">\n"
-"                    <option value=\"done\" title=\"Successful payment\">\n"
-"                        Onnistunut\n"
-"                    </option>\n"
-"                    <option value=\"pending\" title=\"Payment processing\">\n"
-"                        Vireillä\n"
-"                    </option>\n"
-"                    <option value=\"cancel\" title=\"Payment cancelled by customer\">\n"
-"                        Peruutettu\n"
-"                    </option>\n"
-"                    <option value=\"error\" title=\"Processing error\">\n"
-"                        Virhe\n"
-"                    </option>\n"
-"                </select>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_access_code
+msgid "NEGDi Access Code"
+msgstr "NEGDi-koodi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>City</b></small>"
-msgstr "<small><b>Kaupunki</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "NEGDi Merchant Identifier"
+msgstr "NEGDi-kauppiaan tunnus"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Country</b></small>"
-msgstr "<small><b>Maa</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_request
+msgid "NEGDi SHA Request Phrase"
+msgstr "NEGDi SHA Pyyntölause"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Name</b></small>"
-msgstr "<small><b>Nimi</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_response
+msgid "NEGDi SHA Response Phrase"
+msgstr "NEGDi SHA vastauslause"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Street and Number</b></small>"
-msgstr "<small><b>Katu ja numero</b></small>"
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Access Code"
+msgstr "Pääsykoodi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Zip Code</b></small>"
-msgstr "<small><b>Postinumero</b></small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Email</small>"
-msgstr "<small>Sähköposti</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Details (test data)</small>"
-msgstr "<small>Maksutiedot (testitiedot)</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Status</small>"
-msgstr "<small>Maksun tila</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Street 2</small>"
-msgstr "<small>Katu 2</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Authorize"
-msgstr "Valtuuta"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Cancel"
-msgstr "Peruuta"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__cancel
-msgid "Canceled"
-msgstr "Peruttu"
-
-#. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_transaction__capture_manually
-msgid "Capture Amount Manually"
-msgstr "Kaappaa määrä manuaalisesti"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_transaction__capture_manually
-msgid ""
-"Capture the amount from Odoo, when the delivery is completed.\n"
-"Use this if you want to charge your customers cards only when\n"
-"you are sure you can ship the goods to them."
-msgstr ""
-"Tallenna summa Odoosta, kun toimitus on valmis.\n"
-"Käytä tätä, jos haluat veloittaa asiakkaasi kortit vain silloin, kun\n"
-"olet varma, että voit toimittaa tavarat heille."
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Close"
-msgstr "Sulje"
+#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
+msgid "Amazon Payment Services"
+msgstr "Amazonin maksupalvelut"
 
 #. module: payment_negdi
 #: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__code
@@ -145,42 +57,9 @@ msgid "Code"
 msgstr "Koodi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Confirm"
-msgstr "Vahvista"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__done
-msgid "Confirmed"
-msgstr "Vahvistettu"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
-#: model:payment.method,name:payment_negdi.payment_method_negdi
-msgid "NEGDi"
-msgstr "NEGDi"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "NEGDi Express Checkout"
-msgstr "NEGDi Express Checkout"
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_provider.py:0
-msgid "NEGDi providers should never be enabled."
-msgstr "NEGDi-tarjoajia ei pitäisi koskaan ottaa käyttöön."
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__error
-msgid "Error"
-msgstr "Virhe"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "No delivery method is available."
-msgstr "Toimitustapaa ei ole saatavilla."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Merchant Identifier"
+msgstr "Kauppiaan tunnus"
 
 #. module: payment_negdi
 #. odoo-python
@@ -189,24 +68,9 @@ msgid "No transaction found matching reference %s."
 msgstr "Viitettä %s vastaavaa tapahtumaa ei löytynyt."
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay"
-msgstr "Maksa"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay with NEGDi"
-msgstr "Maksa NEGDilla"
-
-#. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_provider
 msgid "Payment Provider"
 msgstr "Maksupalveluntarjoaja"
-
-#. module: payment_negdi
-#: model:ir.model,name:payment_negdi.model_payment_token
-msgid "Payment Token"
-msgstr "Maksutunniste"
 
 #. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_transaction
@@ -214,91 +78,45 @@ msgid "Payment Transaction"
 msgstr "Maksutapahtuma"
 
 #. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/payment_negdi_mixin.js:0
-msgid "Payment processing failed"
-msgstr "Maksun käsittely epäonnistui"
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing payment state."
+msgstr "Vastaanotetut tiedot, joista puuttuu maksutila."
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will be <b>successful</b>."
-msgstr "Tällä maksutavalla suoritetut maksut <b>onnistuvat</b>."
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing reference %(ref)s."
+msgstr "Vastaanotetut tiedot, joista puuttuu viite %(ref)s."
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
 msgid ""
-"Payments made with this payment method will be automatically "
-"<b>cancelled</b>."
-msgstr ""
-"Tällä maksutavalla suoritetut maksut <b>peruutetaan</b> automaattisesti."
+"Received invalid transaction status %(status)s and reason '%(reason)s'."
+msgstr "Saatu virheellinen tapahtuman tila %(status)s ja syy '%(reason)s'."
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will remain <b>pending</b>."
-msgstr "Tällä maksutavalla suoritetut maksut pysyvät <b>vireillä</b>."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Request Phrase"
+msgstr "SHA-pyyntölause"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid ""
-"Payments made with this payment method will simulate a processing "
-"<b>error</b>."
-msgstr ""
-"Tällä maksutavalla suoritetut maksut simuloivat <b>käsittelyvirhettä</b>."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Response Phrase"
+msgstr "SHA-vastauslause"
 
 #. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__pending
-msgid "Pending"
-msgstr "Odottaa"
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_access_code
+msgid "The access code associated with the merchant account."
+msgstr "Kauppiastiliin liittyvä pääsykoodi."
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Set to Error"
-msgstr "Asetetaan virheeseen"
-
-#. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "Simulated State"
-msgstr "Simuloitu tila"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Test Mode"
-msgstr "Testitila"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "The state in which transactions created from this token should be set."
-msgstr "Tila, johon tästä tunnuksesta luodut tapahtumat tulisi asettaa."
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "The code of the merchant account to use with this provider."
+msgstr "Tämän palveluntarjoajan kanssa käytettävän kauppiastilin koodi."
 
 #. module: payment_negdi
 #: model:ir.model.fields,help:payment_negdi.field_payment_provider__code
 msgid "The technical code of this payment provider."
 msgstr "Tämän maksupalveluntarjoajan tekninen koodi."
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "The transaction is not linked to a token."
-msgstr "Transaktio ei ole sidottu valtuutuskoodiin."
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Unpublished"
-msgstr "Julkaisematon"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "Validation Error"
-msgstr "Tarkistusvirhe"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "XXXX XXXX XXXX XXXX"
-msgstr "XXXX XXXX XXXX XXXX XXXX XXXX"
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "You selected the following negdi payment status: %s"
-msgstr "Olet valinnut seuraavan negdimaksutilanteen: %s"

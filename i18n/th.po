@@ -7,9 +7,9 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"POT-Creation-Date: 2023-10-26 21:56+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
 "Last-Translator: Wil Odoo, 2024\n"
 "Language-Team: Thai (https://app.transifex.com/odoo/teams/41243/th/)\n"
@@ -20,118 +20,34 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid ""
-"<select id=\"simulated_payment_state\" class=\"form-select\">\n"
-"                    <option value=\"done\" title=\"Successful payment\">\n"
-"                        Successful\n"
-"                    </option>\n"
-"                    <option value=\"pending\" title=\"Payment processing\">\n"
-"                        Pending\n"
-"                    </option>\n"
-"                    <option value=\"cancel\" title=\"Payment cancelled by customer\">\n"
-"                        Cancelled\n"
-"                    </option>\n"
-"                    <option value=\"error\" title=\"Processing error\">\n"
-"                        Error\n"
-"                    </option>\n"
-"                </select>"
-msgstr ""
-"<select id=\"simulated_payment_state\" class=\"form-select\">\n"
-"                    <option value=\"done\" title=\"Successful payment\">\n"
-"                        สำเร็จ\n"
-"                    </option>\n"
-"                    <option value=\"pending\" title=\"Payment processing\">\n"
-"                        รอดำเนินการ\n"
-"                    </option>\n"
-"                    <option value=\"cancel\" title=\"Payment cancelled by customer\">\n"
-"                        ยกเลิก\n"
-"                    </option>\n"
-"                    <option value=\"error\" title=\"Processing error\">\n"
-"                        มีข้อผิดพลาด\n"
-"                    </option>\n"
-"                </select>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_access_code
+msgid "NEGDi Access Code"
+msgstr "รหัสการเข้าถึง NEGDi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>City</b></small>"
-msgstr "<small><b>เมือง</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "NEGDi Merchant Identifier"
+msgstr "ตัวระบุผู้ค้า NEGDi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Country</b></small>"
-msgstr "<small><b>ประเทศ</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_request
+msgid "NEGDi SHA Request Phrase"
+msgstr "คำขอ NEGDi SHA"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Name</b></small>"
-msgstr "<small><b>ชื่อ</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_response
+msgid "NEGDi SHA Response Phrase"
+msgstr "คำตอบกลับ NEGDi SHA"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Street and Number</b></small>"
-msgstr "<small><b>ถนนและหมายเลข</b></small>"
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Access Code"
+msgstr "รหัสการเข้าถึง"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Zip Code</b></small>"
-msgstr "<small><b>รหัสไปรษณีย์</b></small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Email</small>"
-msgstr "<small>อีเมล</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Details (test data)</small>"
-msgstr "<small>รายละเอียดการชำระเงิน (ข้อมูลทดสอบ)</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Status</small>"
-msgstr "<small>สถานะการชำระเงิน</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Street 2</small>"
-msgstr "<small>ถนน 2</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Authorize"
-msgstr "อนุญาต"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Cancel"
-msgstr "ยกเลิก"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__cancel
-msgid "Canceled"
-msgstr "ถูกยกเลิก"
-
-#. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_transaction__capture_manually
-msgid "Capture Amount Manually"
-msgstr "การตัดยอดเงินด้วยตนเอง"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_transaction__capture_manually
-msgid ""
-"Capture the amount from Odoo, when the delivery is completed.\n"
-"Use this if you want to charge your customers cards only when\n"
-"you are sure you can ship the goods to them."
-msgstr ""
-"เก็บเงินจาก Odoo เมื่อการส่งมอบเสร็จสิ้น\n"
-"ใช้สิ่งนี้หากคุณต้องการเรียกเก็บเงินจากบัตรของลูกค้าของคุณเฉพาะเมื่อ\n"
-"คุณแน่ใจว่าคุณสามารถจัดส่งสินค้าให้พวกเขาได้เท่านั้น"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Close"
-msgstr "ปิด"
+#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
+msgid "Amazon Payment Services"
+msgstr "บริการชำระเงินของ Amazon"
 
 #. module: payment_negdi
 #: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__code
@@ -139,42 +55,9 @@ msgid "Code"
 msgstr "โค้ด"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Confirm"
-msgstr "ยืนยัน"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__done
-msgid "Confirmed"
-msgstr "ยืนยันแล้ว"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
-#: model:payment.method,name:payment_negdi.payment_method_negdi
-msgid "NEGDi"
-msgstr "สาธิต"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "NEGDi Express Checkout"
-msgstr "การชำระเงินด่วน NEGDi"
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_provider.py:0
-msgid "NEGDi providers should never be enabled."
-msgstr "ไม่ควรเปิดใช้งานผู้ให้บริการ NEGDi"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__error
-msgid "Error"
-msgstr "ผิดพลาด"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "No delivery method is available."
-msgstr ""
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Merchant Identifier"
+msgstr "ตัวระบุผู้ขาย"
 
 #. module: payment_negdi
 #. odoo-python
@@ -183,24 +66,9 @@ msgid "No transaction found matching reference %s."
 msgstr "ไม่พบธุรกรรมที่ตรงกับการอ้างอิง %s"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay"
-msgstr "จ่าย"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay with NEGDi"
-msgstr "ชำระเงินด้วย NEGDi"
-
-#. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_provider
 msgid "Payment Provider"
 msgstr "ผู้ให้บริการชำระเงิน"
-
-#. module: payment_negdi
-#: model:ir.model,name:payment_negdi.model_payment_token
-msgid "Payment Token"
-msgstr "โทเค็นการชำระเงิน"
 
 #. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_transaction
@@ -208,89 +76,45 @@ msgid "Payment Transaction"
 msgstr "ธุรกรรมสำหรับการชำระเงิน"
 
 #. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/payment_negdi_mixin.js:0
-msgid "Payment processing failed"
-msgstr "การประมวลผลการชำระเงินล้มเหลว"
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing payment state."
+msgstr "ได้รับข้อมูลโดยไม่มีสถานะการชำระเงิน"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will be <b>successful</b>."
-msgstr "การชำระเงินด้วยวิธีนี้จะ<b>เสร็จสมบูรณ์</b>"
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing reference %(ref)s."
+msgstr "ได้รับข้อมูลโดยไม่มีการอ้างอิง %(ref)s"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
 msgid ""
-"Payments made with this payment method will be automatically "
-"<b>cancelled</b>."
-msgstr "การชำระเงินด้วยวิธีการชำระเงินนี้จะ<b>ถูกยกเลิก</b>โดยอัตโนมัติ"
+"Received invalid transaction status %(status)s and reason '%(reason)s'."
+msgstr "ได้รับสถานะธุรกรรมที่ไม่ถูกต้อง %(status)s และเหตุผลคือ '%(reason)s'"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will remain <b>pending</b>."
-msgstr "การชำระเงินด้วยวิธีนี้จะยังคงอยู่ในสถานะ <b>รอดำเนินการ</b>"
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Request Phrase"
+msgstr "คำขอ SHA"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid ""
-"Payments made with this payment method will simulate a processing "
-"<b>error</b>."
-msgstr "การชำระเงินด้วยวิธีนี้จะจำลองการประมวลผล <b>ข้อผิดพลาด</b>"
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Response Phrase"
+msgstr "คำตอบกลับ SHA"
 
 #. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__pending
-msgid "Pending"
-msgstr "รอดำเนินการ"
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_access_code
+msgid "The access code associated with the merchant account."
+msgstr "รหัสการเข้าถึงที่เชื่อมโยงกับบัญชีผู้ค้า"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Set to Error"
-msgstr "ตั้งค่าเป็นข้อผิดพลาด"
-
-#. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "Simulated State"
-msgstr "สถานะจำลอง"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Test Mode"
-msgstr "ทดสอบโหมด"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "The state in which transactions created from this token should be set."
-msgstr "สถานะที่ควรตั้งค่าธุรกรรมที่สร้างจากโทเค็นนี้"
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "The code of the merchant account to use with this provider."
+msgstr "รหัสของบัญชีผู้ค้าที่จะใช้กับผู้ให้บริการรายนี้"
 
 #. module: payment_negdi
 #: model:ir.model.fields,help:payment_negdi.field_payment_provider__code
 msgid "The technical code of this payment provider."
 msgstr "รหัสทางเทคนิคของผู้ให้บริการชำระเงินรายนี้"
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "The transaction is not linked to a token."
-msgstr "ธุรกรรมไม่ได้เชื่อมโยงกับโทเค็น"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Unpublished"
-msgstr "ยกเลิกการเผยแพร่"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "Validation Error"
-msgstr "ข้อผิดพลาดในการตรวจสอบความถูกต้อง"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "XXXX XXXX XXXX XXXX"
-msgstr "XXXX XXXX XXXX XXXX"
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "You selected the following negdi payment status: %s"
-msgstr "คุณเลือกสถานะการชำระเงินสาธิตต่อไปนี้: %s"

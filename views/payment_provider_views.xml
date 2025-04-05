@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8' ?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
     <record id="payment_provider_form" model="ir.ui.view">
@@ -6,9 +6,25 @@
         <field name="model">payment.provider</field>
         <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
-            <page name="credentials" position="attributes">
-                <attribute name="invisible" separator="or" add="code == 'negdi'"/>
-            </page>
+            <group name="provider_credentials" position='inside'>
+                <group invisible="code != 'negdi'">
+                    <field name="negdi_merchant_identifier"
+                           string="Merchant Identifier"
+                           required="code == 'negdi' and state != 'disabled'"/>
+                    <field name="negdi_access_code"
+                           string="Access Code"
+                           required="code == 'negdi' and state != 'disabled'"
+                           password="True"/>
+                    <field name="negdi_sha_request"
+                           string="SHA Request Phrase"
+                           required="code == 'negdi' and state != 'disabled'"
+                           password="True"/>
+                    <field name="negdi_sha_response"
+                           string="SHA Response Phrase"
+                           required="code == 'negdi' and state != 'disabled'"
+                           password="True"/>
+                </group>
+            </group>
         </field>
     </record>
 

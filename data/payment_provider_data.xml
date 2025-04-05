@@ -1,21 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
 
-    <record id="payment_negdi.payment_provider_negdi" model="payment.provider">
-        <field name="name">Negdi Payment</field>  <!-- Add this required field -->
+    <record id="payment.payment_provider_negdi" model="payment.provider">
         <field name="code">negdi</field>
-        <field name="state">test</field>
-        <field name="is_published">True</field>
-        <field name="inline_form_view_id" ref="payment_negdi.inline_form"/>
-        <field name="token_inline_form_view_id" ref="payment_negdi.token_inline_form"/>
-        <field name="express_checkout_form_view_id" ref="payment_negdi.express_checkout_form"/>
-        <field name="allow_tokenization">True</field>
-        <field name="allow_express_checkout">True</field>
-        <field name="payment_method_ids"
-               eval="[Command.set([
-                         ref('payment_negdi.payment_method_negdi'),
-                     ])]"
-        />
+        <field name="redirect_form_view_id" ref="redirect_form"/>
     </record>
 
 </odoo>

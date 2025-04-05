@@ -3,14 +3,13 @@
 # 	* payment_negdi
 # 
 # Translators:
-# zakariya moradi, 2025
 # Tiffany Chang, 2025
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"POT-Creation-Date: 2023-10-26 21:56+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
 "Last-Translator: Tiffany Chang, 2025\n"
 "Language-Team: Persian (https://app.transifex.com/odoo/teams/41243/fa/)\n"
@@ -21,103 +20,34 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid ""
-"<select id=\"simulated_payment_state\" class=\"form-select\">\n"
-"                    <option value=\"done\" title=\"Successful payment\">\n"
-"                        Successful\n"
-"                    </option>\n"
-"                    <option value=\"pending\" title=\"Payment processing\">\n"
-"                        Pending\n"
-"                    </option>\n"
-"                    <option value=\"cancel\" title=\"Payment cancelled by customer\">\n"
-"                        Cancelled\n"
-"                    </option>\n"
-"                    <option value=\"error\" title=\"Processing error\">\n"
-"                        Error\n"
-"                    </option>\n"
-"                </select>"
-msgstr ""
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_access_code
+msgid "NEGDi Access Code"
+msgstr "کد دسترسی NEGDi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>City</b></small>"
-msgstr "<small><b>شهر</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "NEGDi Merchant Identifier"
+msgstr "شناسه فروشنده NEGDi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Country</b></small>"
-msgstr "<small><b>کشور</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_request
+msgid "NEGDi SHA Request Phrase"
+msgstr "عبارت درخواست SHA NEGDi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Name</b></small>"
-msgstr "<small><b>نام</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_response
+msgid "NEGDi SHA Response Phrase"
+msgstr "عبارت پاسخ SHA NEGDi"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Street and Number</b></small>"
-msgstr "<small><b>خیابان و شماره</b></small>"
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Access Code"
+msgstr "کد دسترسی"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Zip Code</b></small>"
-msgstr "<small><b>کد پستی</b></small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Email</small>"
-msgstr "<small>ایمیل</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Details (test data)</small>"
-msgstr "<small>جزئیات پرداخت (داده‌های آزمایشی)</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Status</small>"
-msgstr "<small>وضعیت پرداخت</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Street 2</small>"
-msgstr "<small>خیابان ۲</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Authorize"
-msgstr "اجازه دادن"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Cancel"
-msgstr "لغو"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__cancel
-msgid "Canceled"
-msgstr "لغو شده"
-
-#. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_transaction__capture_manually
-msgid "Capture Amount Manually"
-msgstr "ثبت مبلغ به صورت دستی"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_transaction__capture_manually
-msgid ""
-"Capture the amount from Odoo, when the delivery is completed.\n"
-"Use this if you want to charge your customers cards only when\n"
-"you are sure you can ship the goods to them."
-msgstr ""
-"مبلغ را از اودوو بگیرید، زمانی که تحویل تکمیل شد.\n"
-"از این استفاده کنید اگر می‌خواهید کارت‌های مشتریان خود را فقط زمانی که مطمئن هستید می‌توانید کالاها را به آن‌ها ارسال کنید، شارژ کنید."
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Close"
-msgstr "بستن"
+#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
+msgid "Amazon Payment Services"
+msgstr "خدمات پرداخت آمازون"
 
 #. module: payment_negdi
 #: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__code
@@ -125,58 +55,15 @@ msgid "Code"
 msgstr "کد"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Confirm"
-msgstr "تایید کردن"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__done
-msgid "Confirmed"
-msgstr "تایید شده"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
-#: model:payment.method,name:payment_negdi.payment_method_negdi
-msgid "NEGDi"
-msgstr "آزمایشی"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "NEGDi Express Checkout"
-msgstr "دمو تسویه حساب سریع"
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_provider.py:0
-msgid "NEGDi providers should never be enabled."
-msgstr "ارائه‌دهندگان دمو هرگز نباید فعال شوند."
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__error
-msgid "Error"
-msgstr "خطا"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "No delivery method is available."
-msgstr "روش تحویل در دسترس نیست"
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Merchant Identifier"
+msgstr "شناسه فروشنده"
 
 #. module: payment_negdi
 #. odoo-python
 #: code:addons/payment_negdi/models/payment_transaction.py:0
 msgid "No transaction found matching reference %s."
-msgstr "هیچ تراکنشی با مرجع %s یافت نشد."
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay"
-msgstr "پرداخت"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay with NEGDi"
-msgstr "پرداخت با دمو"
+msgstr "هیچ تراکنشی مرجع منطبق پیدا نشد%s"
 
 #. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_provider
@@ -184,107 +71,50 @@ msgid "Payment Provider"
 msgstr "سرویس دهنده پرداخت"
 
 #. module: payment_negdi
-#: model:ir.model,name:payment_negdi.model_payment_token
-msgid "Payment Token"
-msgstr "توکن پرداخت"
-
-#. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_transaction
 msgid "Payment Transaction"
 msgstr "تراکنش پرداخت"
 
 #. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/payment_negdi_mixin.js:0
-msgid "Payment processing failed"
-msgstr "پردازش پرداخت ناموفق بود"
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing payment state."
+msgstr "داده‌های دریافتی با وضعیت پرداخت گمشده"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will be <b>successful</b>."
-msgstr ""
-"پرداخت‌هایی که با این روش پرداخت انجام می‌شوند <b>موفق</b> خواهند بود."
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing reference %(ref)s."
+msgstr "داده‌های دریافتی با مرجع گمشده%(ref)s"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
 msgid ""
-"Payments made with this payment method will be automatically "
-"<b>cancelled</b>."
-msgstr ""
+"Received invalid transaction status %(status)s and reason '%(reason)s'."
+msgstr "وضعیت تراکنش %(status)sو دلیل نامعتبر دریافت شد%(reason)s"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will remain <b>pending</b>."
-msgstr ""
-"پرداخت‌هایی که با این روش پرداخت صورت می‌گیرند به حالت <b>انتظار</b> باقی "
-"می‌مانند."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Request Phrase"
+msgstr "عبارت درخواست SHA"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid ""
-"Payments made with this payment method will simulate a processing "
-"<b>error</b>."
-msgstr ""
-"پرداخت‌هایی که با این روش پرداخت انجام می‌شوند، یک <b>خطا</b> در پردازش را "
-"شبیه‌سازی می‌کنند."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Response Phrase"
+msgstr "عبارت پاسخ SHA"
 
 #. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__pending
-msgid "Pending"
-msgstr "معلق"
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_access_code
+msgid "The access code associated with the merchant account."
+msgstr "کد دسترسی مرتبط با حساب فروشنده"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Set to Error"
-msgstr "به خطا تنظیم شود"
-
-#. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "Simulated State"
-msgstr "وضعیت شبیه‌سازی‌شده"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Test Mode"
-msgstr "حالت آزمایشی"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "The state in which transactions created from this token should be set."
-msgstr "حالتی که تراکنش‌های ایجاد شده از این توکن باید تنظیم شوند."
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "The code of the merchant account to use with this provider."
+msgstr "کد حساب فروشنده برای استفاده با این ارائه‌دهنده"
 
 #. module: payment_negdi
 #: model:ir.model.fields,help:payment_negdi.field_payment_provider__code
 msgid "The technical code of this payment provider."
 msgstr "کد فنی این ارائه دهنده پرداخت."
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "The transaction is not linked to a token."
-msgstr "تراکنش به یک توکن متصل نیست."
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Unpublished"
-msgstr "منتشر نشده"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "Validation Error"
-msgstr "خطای ارزیابی"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "XXXX XXXX XXXX XXXX"
-msgstr ""
-"متاسفانه، من نمی‌توانم به طور مستقیم متن‌هایی که به عنوان \"XXXX XXXX XXXX "
-"XXXX\" نمایش داده شده‌اند را ترجمه کنم. لطفا متن کامل را ارائه دهید تا "
-"بتوانم در ترجمه‌اش به شما کمک کنم."
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "You selected the following negdi payment status: %s"
-msgstr "شما وضعیت پرداخت نمایشی زیر را انتخاب کرده‌اید: %s"

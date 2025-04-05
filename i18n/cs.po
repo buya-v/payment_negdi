@@ -7,9 +7,9 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 18.0\n"
+"Project-Id-Version: Odoo Server 17.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-26 08:56+0000\n"
+"POT-Creation-Date: 2023-10-26 21:56+0000\n"
 "PO-Revision-Date: 2024-09-25 09:41+0000\n"
 "Last-Translator: Wil Odoo, 2024\n"
 "Language-Team: Czech (https://app.transifex.com/odoo/teams/41243/cs/)\n"
@@ -20,103 +20,34 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid ""
-"<select id=\"simulated_payment_state\" class=\"form-select\">\n"
-"                    <option value=\"done\" title=\"Successful payment\">\n"
-"                        Successful\n"
-"                    </option>\n"
-"                    <option value=\"pending\" title=\"Payment processing\">\n"
-"                        Pending\n"
-"                    </option>\n"
-"                    <option value=\"cancel\" title=\"Payment cancelled by customer\">\n"
-"                        Cancelled\n"
-"                    </option>\n"
-"                    <option value=\"error\" title=\"Processing error\">\n"
-"                        Error\n"
-"                    </option>\n"
-"                </select>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_access_code
+msgid "NEGDi Access Code"
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>City</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "NEGDi Merchant Identifier"
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Country</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_request
+msgid "NEGDi SHA Request Phrase"
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Name</b></small>"
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_sha_response
+msgid "NEGDi SHA Response Phrase"
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Street and Number</b></small>"
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Access Code"
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small><b>Zip Code</b></small>"
-msgstr ""
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Email</small>"
-msgstr ""
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Details (test data)</small>"
-msgstr ""
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "<small>Payment Status</small>"
-msgstr "<small>Stav platby</small>"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_inline_form
-msgid "<small>Street 2</small>"
-msgstr ""
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Authorize"
-msgstr ""
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Cancel"
-msgstr "Zrušit"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__cancel
-msgid "Canceled"
-msgstr "Zrušeno"
-
-#. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_transaction__capture_manually
-msgid "Capture Amount Manually"
-msgstr "Sejmout částku ručně"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_transaction__capture_manually
-msgid ""
-"Capture the amount from Odoo, when the delivery is completed.\n"
-"Use this if you want to charge your customers cards only when\n"
-"you are sure you can ship the goods to them."
-msgstr ""
-"Zachytit částku z Odoo, když je dodávka dokončena.\n"
-"Tuto funkci použijte, pokud chcete zákazníkům účtovat z karet pouze tehdy, když jste si jisti, že jim můžete zboží odeslat."
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Close"
-msgstr "Zavřít"
+#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
+msgid "Amazon Payment Services"
+msgstr "Platební služby Amazon"
 
 #. module: payment_negdi
 #: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__code
@@ -124,41 +55,8 @@ msgid "Code"
 msgstr "Kód"
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Confirm"
-msgstr "Potvrdit"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__done
-msgid "Confirmed"
-msgstr "Potvrzený"
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
-#: model:payment.method,name:payment_negdi.payment_method_negdi
-msgid "NEGDi"
-msgstr "NEGDi"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "NEGDi Express Checkout"
-msgstr ""
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_provider.py:0
-msgid "NEGDi providers should never be enabled."
-msgstr ""
-
-#. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__error
-msgid "Error"
-msgstr "Chyba"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "No delivery method is available."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Merchant Identifier"
 msgstr ""
 
 #. module: payment_negdi
@@ -168,24 +66,9 @@ msgid "No transaction found matching reference %s."
 msgstr "Nebyla nalezena žádná transakce odpovídající odkazu %s."
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay"
-msgstr "Zaplatit"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Pay with NEGDi"
-msgstr "Zaplatit zkušební platbou"
-
-#. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_provider
 msgid "Payment Provider"
 msgstr "Poskytovatel platby"
-
-#. module: payment_negdi
-#: model:ir.model,name:payment_negdi.model_payment_token
-msgid "Payment Token"
-msgstr "Platební token"
 
 #. module: payment_negdi
 #: model:ir.model,name:payment_negdi.model_payment_transaction
@@ -193,89 +76,45 @@ msgid "Payment Transaction"
 msgstr "Platební transakce"
 
 #. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/payment_negdi_mixin.js:0
-msgid "Payment processing failed"
-msgstr "Zpracování platby se nezdařilo"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will be <b>successful</b>."
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing payment state."
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Received data with missing reference %(ref)s."
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
 msgid ""
-"Payments made with this payment method will be automatically "
-"<b>cancelled</b>."
+"Received invalid transaction status %(status)s and reason '%(reason)s'."
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid "Payments made with this payment method will remain <b>pending</b>."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Request Phrase"
 msgstr ""
 
 #. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.token_inline_form
-msgid ""
-"Payments made with this payment method will simulate a processing "
-"<b>error</b>."
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "SHA Response Phrase"
 msgstr ""
 
 #. module: payment_negdi
-#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_token__negdi_simulated_state__pending
-msgid "Pending"
-msgstr "Čeká"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_transaction_form
-msgid "Set to Error"
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_access_code
+msgid "The access code associated with the merchant account."
 msgstr ""
 
 #. module: payment_negdi
-#: model:ir.model.fields,field_description:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "Simulated State"
-msgstr ""
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Test Mode"
-msgstr "Testovací režim"
-
-#. module: payment_negdi
-#: model:ir.model.fields,help:payment_negdi.field_payment_token__negdi_simulated_state
-msgid "The state in which transactions created from this token should be set."
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_merchant_identifier
+msgid "The code of the merchant account to use with this provider."
 msgstr ""
 
 #. module: payment_negdi
 #: model:ir.model.fields,help:payment_negdi.field_payment_provider__code
 msgid "The technical code of this payment provider."
 msgstr "Technický kód tohoto poskytovatele plateb."
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "The transaction is not linked to a token."
-msgstr "Transakce není spojena s tokenem."
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.express_checkout_form
-msgid "Unpublished"
-msgstr "Nepublikovaný"
-
-#. module: payment_negdi
-#. odoo-javascript
-#: code:addons/payment_negdi/static/src/js/express_checkout_form.js:0
-msgid "Validation Error"
-msgstr "Chyba ověření"
-
-#. module: payment_negdi
-#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_details
-msgid "XXXX XXXX XXXX XXXX"
-msgstr ""
-
-#. module: payment_negdi
-#. odoo-python
-#: code:addons/payment_negdi/models/payment_transaction.py:0
-msgid "You selected the following negdi payment status: %s"
-msgstr ""
