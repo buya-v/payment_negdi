@@ -7,7 +7,7 @@ import pprint
 from werkzeug.exceptions import Forbidden
 
 from odoo import http
-from odoo.exceptions import ValidationError
+from odoo.exceptions import ValidationError, UserError
 from odoo.http import request
 
 
@@ -18,34 +18,53 @@ class NEGDiController(http.Controller):
     _return_url = '/payment/negdi/return'
     _webhook_url = '/payment/negdi/webhook'
 
-    @http.route(
-        _return_url, type='http', auth='public', methods=['POST'], csrf=False, save_session=False
-    )
-    def negdi_return_from_checkout(self, **data):
-        """ Process the notification data sent by NEGDi after redirection.
+    @http.route(_return_url, type='http', auth='public', methods=['GET'], csrf=False, save_session=False)
+    def negdi_return_from_checkout(self, **kwargs):
+        """ Handle the callback from NEGDi after payment attempt. """
+        _logger.info("NEGDi: Handling return request with data:\n%s", pprint.pformat(kwargs))
 
-        The route is flagged with `save_session=False` to prevent Odoo from assigning a new session
-        to the user if they are redirected to this route with a POST request. Indeed, as the session
-        cookie is created without a `SameSite` attribute, some browsers that don't implement the
-        recommended default `SameSite=Lax` behavior will not include the cookie in the redirection
-        request from the payment provider to Odoo. As the redirection to the '/payment/status' page
-        will satisfy any specification of the `SameSite` attribute, the session of the user will be
-        retrieved and with it the transaction which will be immediately post-processed.
+        # Extract tranid and checkid from the GET parameters
+        tranid = kwargs.get('tranid')
+        checkid = kwargs.get('checkid')
 
-        :param dict data: The notification data.
-        """
-        _logger.info("Handling redirection from NEGDi with data:\n%s", pprint.pformat(data))
+        if not tranid or not checkid:
+            _logger.warning("NEGDi: Received incomplete return data: %s", kwargs)
+            # Redirect to a generic error or status page if data is missing
+            return request.redirect('/payment/status?error=missing_data')
 
-        # Check the integrity of the notification.
-        tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
-            'negdi', data
-        )
-        # self._verify_notification_signature(data, tx_sudo)
+        try:
+            # Find the Odoo transaction based on the provider_reference (tranid)
+            # Use sudo() for access rights, as the user might not be logged in reliably
+            tx_sudo = request.env['payment.transaction'].sudo().search([
+                ('provider_reference', '=', tranid),
+                ('provider_code', '=', 'negdi')
+            ], limit=1)
 
-        # Handle the notification data.
-        tx_sudo._handle_notification_data('negdi', data)
+            if not tx_sudo:
+                _logger.warning("NEGDi: Transaction not found for tranid: %s", tranid)
+                return request.redirect('/payment/status?error=tx_not_found')
+
+            # Trigger the inquiry and feedback processing within the transaction model
+            _logger.info("NEGDi: Found tx %s, initiating inquiry.", tx_sudo.reference)
+            inquiry_response_data = tx_sudo._negdi_make_inquiry_request(check_id=checkid)
+            _logger.info("NEGDi: Inquiry successful for tx %s, processing feedback.", tx_sudo.reference)
+            tx_sudo._handle_feedback_data('negdi', inquiry_response_data)
+
+        except (ValidationError, UserError) as e:
+            # Log errors encountered during inquiry or processing
+            _logger.error("NEGDi: Error processing return for tranid %s: %s", tranid, e)
+            # Optionally pass error message to status page? Requires custom handling there.
+            # return request.redirect(f'/payment/status?error={str(e.args[0])}')
+            return request.redirect('/payment/status?error=processing_error')
+        except Exception as e:
+            _logger.exception("NEGDi: Unexpected error processing return for tranid %s.", tranid)
+            return request.redirect('/payment/status?error=unexpected_error')
+
+        # Redirect user to the generic payment status page
+        # Odoo's JS on that page will fetch the final transaction state
+        _logger.info("NEGDi: Redirecting user to /payment/status for tx %s", tx_sudo.reference if 'tx_sudo' in locals() and tx_sudo else tranid)
         return request.redirect('/payment/status')
-
+    
     @http.route(_webhook_url, type='http', auth='public', methods=['POST'], csrf=False)
     def negdi_webhook(self, **data):
         """ Process the notification data sent by NEGDi to the webhook.

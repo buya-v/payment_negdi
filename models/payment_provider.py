@@ -31,9 +31,16 @@ class PaymentProvider(models.Model):
     negdi_password = fields.Char(
         string="NEGDi Merchant Password",
         required_if_provider='negdi',
-        password=True,
         groups='base.group_system',
     )
+
+    negdi_public_key = fields.Text(
+        string="NEGDi Public Key",
+        help="The PEM-formatted public key provided by NEGDi for verifying response signatures.",
+        groups='base.group_system',
+        # required_if_provider='negdi', # Make required if verification is mandatory
+    )
+
 
     #=== BUSINESS METHODS ===#
 
@@ -51,9 +58,9 @@ class PaymentProvider(models.Model):
         """ NEGDi URL getter."""
         self.ensure_one()
         base_url = self._negdi_get_api_url()
-        # Only define the create order endpoint for now
         return {
             'negdi_create_order_url': f"{base_url}/{const.NEGDI_CREATE_ORDER_ENDPOINT}",
+            'negdi_inquiry_order_url': f"{base_url}/{const.NEGDI_INQUIRY_ORDER_ENDPOINT}", # Add inquiry URL
         }
 
     def _negdi_calculate_signature(self, data, incoming=True):
