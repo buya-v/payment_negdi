@@ -1,0 +1,22 @@
+<!-- payment_negdi/views/payment_negdi_templates.xml -->
+<odoo>
+    <template id="redirect_form" name="NEGDi Redirect Logic Minimal">
+        <!-- Essential JavaScript Redirect -->
+        <script t-if="redirect_url" type="text/javascript">
+            console.log("Redirecting to:", '<t t-esc="redirect_url"/>'); // Add logging
+            try {
+                window.location.href = '<t t-esc="redirect_url"/>';
+            } catch (e) {
+                console.error("Redirect failed:", e);
+                alert("Redirect failed. See console."); // Make error obvious
+            }
+        </script>
+        <!-- Error message if URL is missing -->
+         <t t-else="">
+             <script type="text/javascript">
+                console.error("redirect_url is missing!");
+                alert("Could not get redirect URL."); // Make error obvious
+             </script>
+         </t>
+    </template>
+</odoo>

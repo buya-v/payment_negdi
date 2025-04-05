@@ -7,4 +7,4 @@
 # cd ~/odoo16/custom_addons/payment_negdi
 
 # Run the Odoo server with the configuration file
-~/odoo16/venv/bin/python3 ~/odoo16/odoo/odoo-bin -c odoo.conf -u payment_negdi --dev=reload
+~/odoo18/venv/bin/python3 ~/odoo18/odoo/odoo-bin -c odoo.conf -u payment_negdi --dev=reload

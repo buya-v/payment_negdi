@@ -1,64 +1,86 @@
-odoo.define('payment_negdi.payment_form', require => {
-    'use strict';
+/** @odoo-module **/
+/* global NegdiCheckout */
 
-    const checkoutForm = require('payment.checkout_form');
-    const manageForm = require('payment.manage_form');
+import { _t } from '@web/core/l10n/translation';
+import { pyToJsLocale } from '@web/core/l10n/utils';
+import paymentForm from '@payment/js/payment_form';
+import { rpc, RPCError } from '@web/core/network/rpc';
 
-    const paymentNegdiMixin = {
+paymentForm.include({
 
-        //--------------------------------------------------------------------------
-        // Private
-        //--------------------------------------------------------------------------
 
-        /**
-         * Simulate a feedback from a payment provider and redirect the customer to the status page.
-         *
-         * @override method from payment.payment_form_mixin
-         * @private
-         * @param {string} code - The code of the provider
-         * @param {number} providerId - The id of the provider handling the transaction
-         * @param {object} processingValues - The processing values of the transaction
-         * @return {Promise}
-         */
-        _processDirectPayment: function (code, providerId, processingValues) {
-            if (code !== 'negdi') {
-                return this._super(...arguments);
+    // #=== DOM MANIPULATION ===#
+
+    /**
+     * Prepare the inline form of Adyen for direct payment.
+     *
+     * @override method from payment.payment_form
+     * @private
+     * @param {number} providerId - The id of the selected payment option's provider.
+     * @param {string} providerCode - The code of the selected payment option's provider.
+     * @param {number} paymentOptionId - The id of the selected payment option
+     * @param {string} paymentMethodCode - The code of the selected payment method, if any.
+     * @param {string} flow - The online payment flow of the selected payment option
+     * @return {void}
+     */
+    
+
+    // #=== PAYMENT FLOW ===#
+
+    async _initiatePaymentFlow(providerCode, paymentOptionId, paymentMethodCode, flow) {
+        // Create a transaction and retrieve its processing values.
+        await rpc(
+            this.paymentContext['transactionRoute'],
+            this._prepareTransactionRouteParams(),
+        ).then(processingValues => { // The 'processingValues' dictionary is returned by the backend
+
+            // <<< --- START: ADD NEGDI CHECK --- >>>
+            if (processingValues.negdi_redirect_url) { // Check for YOUR custom key
+                console.log("NEGDi: Redirecting to:", processingValues.negdi_redirect_url);
+                window.location.href = processingValues.negdi_redirect_url;
+                return; // <- Stop processing this response further
             }
+            // <<< --- END: ADD NEGDi CHECK --- >>>
 
-            const customerInput = document.getElementById('customer_input').value;
-            const simulatedPaymentState = document.getElementById('simulated_payment_state').value;
-            return this._rpc({
-                route: '/payment/negdi/simulate_payment',
-                params: {
-                    'reference': processingValues.reference,
-                    'payment_details': customerInput,
-                    'simulated_state': simulatedPaymentState,
-                },
-            }).then(() => {
-                window.location = '/payment/status';
-            });
-        },
-
-        /**
-         * Prepare the inline form of Negdi for direct payment.
-         *
-         * @override method from payment.payment_form_mixin
-         * @private
-         * @param {string} code - The code of the selected payment option's provider
-         * @param {integer} paymentOptionId - The id of the selected payment option
-         * @param {string} flow - The online payment flow of the selected payment option
-         * @return {Promise}
-         */
-        _prepareInlineForm: function (code, paymentOptionId, flow) {
-            if (code !== 'negdi') {
-                return this._super(...arguments);
+            // --- Odoo's Standard Flow Handling ---
+            if (flow === 'redirect') {
+                // This part normally handles the redirect_form_html
+                this._processRedirectFlow(
+                    providerCode, paymentOptionId, paymentMethodCode, processingValues
+                );
+            } else if (flow === 'direct') {
+                this._processDirectFlow(
+                    providerCode, paymentOptionId, paymentMethodCode, processingValues
+                );
             } else if (flow === 'token') {
-                return Promise.resolve();
+                this._processTokenFlow(
+                    providerCode, paymentOptionId, paymentMethodCode, processingValues
+                );
             }
-            this._setPaymentFlow('direct');
-            return Promise.resolve()
-        },
-    };
-    checkoutForm.include(paymentNegdiMixin);
-    manageForm.include(paymentNegdiMixin);
+            // Add handling for potential backend errors passed in processingValues
+            else if (processingValues.error) {
+                 console.error("Payment processing error:", processingValues.error.message);
+                 this._displayErrorDialog(
+                      _t("Payment Error"),
+                      processingValues.error.message || _t("An error occurred during payment processing.")
+                 );
+                 this._enableButton(); // Re-enable button on error
+            }
+
+        }).catch(error => { // Catch AJAX call errors
+            if (error instanceof RPCError) {
+                this._displayErrorDialog(_t("Payment processing failed"), error.data.message);
+            } else {
+                // Handle network or other unexpected JS errors
+                this._displayErrorDialog(_t("Error"), _t("An unexpected error occurred. Please try again."));
+                console.error("Payment RPC failed:", error);
+            }
+            this._enableButton(); // The button has been disabled before initiating the flow.
+            // Original code uses return Promise.reject(error); - keep if needed downstream
+            // return Promise.reject(error);
+        });
+    },
+
+    
+
 });

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<odoo noupdate="1">
+<odoo noupdate="0">
 
-    <record id="payment.payment_provider_negdi" model="payment.provider">
+    <record id="payment_negdi.payment_provider_negdi" model="payment.provider">
+        <field name="name">NEGDi</field>
+        <field name="image_128" type="base64" file="payment_negdi/static/description/icon.png"/>
         <field name="code">negdi</field>
-        <field name="inline_form_view_id" ref="inline_form"/>
-        <field name="token_inline_form_view_id" ref="token_inline_form"/>
-        <field name="allow_tokenization">True</field>
+        <!-- <field name="redirect_form_view_id" ref="redirect_form"/> -->
+        <field name="payment_method_ids"
+               eval="[Command.set([
+                         ref('payment.payment_method_card'),
+                     ])]"
+        />
     </record>
 
 </odoo>
