@@ -88,6 +88,20 @@ class PaymentTransaction(models.Model):
         if not api_url:
              self._set_error(_("Configuration error: NEGDi Create Order URL missing."))
              raise ValidationError("NEGDi: Provider not configured correctly (missing URL).")
+        
+
+        # --- Determine the description ---
+        # Use the name of the first linked Sale Order if available,
+        # otherwise fallback to the transaction reference.
+        ordernum = self.reference # Default fallback
+        if self.sale_order_ids:
+            # Assumes only one SO is linked in the e-commerce flow
+            # Access the name field of the first sale.order record
+            ordernum = self.sale_order_ids[0].name
+            _logger.info("NEGDi: Using Sale Order name '%s' for tx %s", ordernum, self.reference)
+        else:
+            _logger.info("NEGDi: No linked Sale Order found for tx %s, using reference '%s'", self.reference, ordernum)
+        # --- End Determine description ---
 
         payload = {
             'ordertype': NEGDI_DEFAULT_ORDER_TYPE,
@@ -98,7 +112,7 @@ class PaymentTransaction(models.Model):
             'returnurl': self.get_base_url() + '/payment/negdi/return',
             'amount': self.amount,
             'currency': self.currency_id.name,
-            'ordernum': self.reference,
+            'ordernum': ordernum,
             'description': self.reference,
         }
 
