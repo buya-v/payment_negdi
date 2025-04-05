@@ -5,7 +5,7 @@ import logging
 
 from odoo import fields, models
 
-from odoo.addons.payment_negdi import const
+from .. import const
 
 
 _logger = logging.getLogger(__name__)

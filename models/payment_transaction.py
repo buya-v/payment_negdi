@@ -8,9 +8,9 @@ from odoo import _, api, models
 from odoo.exceptions import ValidationError
 
 from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment_negdi import utils as negdi_utils
-from odoo.addons.payment_negdi.const import PAYMENT_STATUS_MAPPING
-from odoo.addons.payment_negdi.controllers.main import NEGDiController
+from .. import utils as negdi_utils
+from ..const import PAYMENT_STATUS_MAPPING
+from ..controllers.main import NEGDiController
 
 
 _logger = logging.getLogger(__name__)

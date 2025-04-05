@@ -4,8 +4,8 @@ from odoo.tests import tagged
 from odoo.tools import mute_logger
 
 from odoo.addons.payment import utils as payment_utils
-from odoo.addons.payment_negdi.controllers.main import NEGDiController
-from odoo.addons.payment_negdi.tests.common import NEGDiCommon
+from ..controllers.main import NEGDiController
+from ..tests.common import NEGDiCommon
 
 
 @tagged('post_install', '-at_install')
