@@ -34,6 +34,19 @@ paymentForm.include({
             this._prepareTransactionRouteParams(),
         ).then(processingValues => { // The 'processingValues' dictionary is returned by the backend
 
+             // <<< --- START: CHECK FOR BACKEND ERROR FIRST --- >>>
+             if (processingValues.error && processingValues.error.message) {
+                console.error("Payment processing error from backend:", processingValues.error.message);
+                this._displayErrorDialog(
+                    _t("Payment Error"),
+                    processingValues.error.message
+                );
+                this._enableButton();
+                return; // Stop processing on error
+            }
+            // <<< --- END: CHECK FOR BACKEND ERROR FIRST --- >>>
+
+
             // <<< --- START: ADD NEGDI CHECK --- >>>
             if (processingValues.negdi_redirect_url) { // Check for YOUR custom key
                 console.log("NEGDi: Redirecting to:", processingValues.negdi_redirect_url);
@@ -67,17 +80,20 @@ paymentForm.include({
                  this._enableButton(); // Re-enable button on error
             }
 
-        }).catch(error => { // Catch AJAX call errors
+        }).catch(error => { // Catch AJAX communication errors
+            console.error("Payment RPC failed:", error);
             if (error instanceof RPCError) {
-                this._displayErrorDialog(_t("Payment processing failed"), error.data.message);
+                this._displayErrorDialog(
+                    _t("Payment processing failed"),
+                    error.data?.message || error.message || _t("An unknown server error occurred.")
+                );
             } else {
-                // Handle network or other unexpected JS errors
-                this._displayErrorDialog(_t("Error"), _t("An unexpected error occurred. Please try again."));
-                console.error("Payment RPC failed:", error);
+                this._displayErrorDialog(
+                    _t("Error"),
+                    _t("Could not connect to the payment server. Please check your connection and try again.")
+                );
             }
-            this._enableButton(); // The button has been disabled before initiating the flow.
-            // Original code uses return Promise.reject(error); - keep if needed downstream
-            // return Promise.reject(error);
+            this._enableButton();
         });
     },
 

@@ -125,12 +125,18 @@ class PaymentTransaction(models.Model):
             _logger.info("NEGDi: Received ec1000 response for %s:\n%s", self.reference, pprint.pformat(response_data))
 
             order_data = response_data.get('order', {})
-            negdi_url = order_data.get('negdiurl')
-
-            if not negdi_url:
-                 _logger.error("NEGDi: 'negdiurl' not found in response for %s.", self.reference)
-                 self._set_error(_("NEGDi: Payment URL missing in API response."))
-                 raise ValidationError(_("NEGDi: Could not get payment URL. Please try again."))
+            negdi_status = order_data.get('status')
+            if negdi_status == 'System error':
+                negdi_order_detail = order_data.get('detail')
+                _logger.error("System error received: %s", negdi_order_detail)
+                self._set_error(_(negdi_order_detail))
+                raise ValidationError(_("NEGDi System Error: %s", negdi_order_detail))
+            else:  
+                negdi_url = order_data.get('negdiurl')
+                if not negdi_url:
+                    _logger.error("NEGDi: 'negdiurl' not found in response for %s.", self.reference)
+                    self._set_error(_("NEGDi: Payment URL missing in API response."))
+                    raise ValidationError(_("NEGDi: Could not get payment URL. Please try again."))
 
             # Store tranid/checkid if needed later for verification/inquiry
 
@@ -157,7 +163,7 @@ class PaymentTransaction(models.Model):
         except Exception as e:
             _logger.error("NEGDi: Unexpected error during API request for %s: %s", self.reference, e, exc_info=True)
             self._set_error(_("NEGDi: Unexpected error: %s", e))
-            raise ValidationError(_("An unexpected error occurred."))
+            raise ValidationError(_("An unexpected error occurred. %s", e))
 
     def _negdi_make_inquiry_request(self, check_id):
         """ Makes the server-to-server request to NEGDi's ec1098 endpoint. """

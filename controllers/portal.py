@@ -99,6 +99,7 @@ class NegdiPaymentPortal(PaymentPortal):
         # Check provider *after* tx is created
         if tx_sudo and tx_sudo.provider_code == 'negdi':
             _logger.info("Processing NEGDi payment for Tx %s (%s)", tx_sudo.id, tx_sudo.reference)
+        
             try:
                 # Call the API request method defined in the transaction model
                 negdi_url = tx_sudo._negdi_make_ec1000_request()
