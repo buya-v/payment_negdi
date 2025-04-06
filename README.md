@@ -1,10 +1,8 @@
-# Amazon Payment Services
+# NEGDi Payment Services
 
 ## Technical details
 
-API: [Redirection API](https://paymentservices-reference.payfort.com/docs/api/build/index.html#redirection)
-
-This module integrates Amazon Payment Services using the generic payment with redirection flow based
+This module integrates NEGDi Payment Services using the generic payment with redirection flow based
 on form submission provided by the `payment` module.
 
 ## Supported features
@@ -14,16 +12,15 @@ on form submission provided by the `payment` module.
 
 ## Not implemented features
 
-- [Tokenization with or without payment](https://paymentservices-reference.payfort.com/docs/api/build/index.html#safe-tokenization)
+- [Tokenization with or without payment]
 
 ## Module history
 
-- `16.0`
-  - The first version of the module is merged. odoo/odoo#95860
+- `18.0`
+  - The first version of the module is release in 04/05/2025.
 
 ## Testing instructions
 
-https://paymentservices.amazon.com/docs/EN/12.html
 
 ### VISA
 

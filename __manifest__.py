@@ -5,7 +5,17 @@
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': "An NEGDi payment provider in Mongolia.",
-    'description': " ",  # Non-empty string to avoid loading the README file.
+    'description': 
+    """ 
+    NEGDi is a payment processor company having card issuing and acquiring licenses 
+    from Bank of Monngolia.
+    To use this module, you should contact with NEGDi and need to get credentials.
+    - Username
+    - Password 
+    - Terminal ID
+
+    Contact: hello@negdi.mn
+    """,  # Non-empty string to avoid loading the README file.
     'depends': ['payment','website'],
     'data': [
         # 'views/payment_negdi_templates.xml',
