@@ -48,8 +48,8 @@ msgstr ""
 
 #. module: payment_negdi
 #: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
-msgid "Amazon Payment Services"
-msgstr "Amazon maksājumu pakalpojumi"
+msgid "NEGDi Payment Services"
+msgstr "NEGDi maksājumu pakalpojumi"
 
 #. module: payment_negdi
 #: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__code
