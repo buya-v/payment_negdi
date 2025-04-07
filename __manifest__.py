@@ -15,6 +15,7 @@
     - Terminal ID
 
     Contact: hello@negdi.mn
+
     """,  # Non-empty string to avoid loading the README file.
     'depends': ['payment','website'],
     'data': [
