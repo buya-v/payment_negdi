@@ -26,7 +26,7 @@ _logger.info("***** NegdiPaymentPortal Controller File Loaded *****")
 
 class NegdiPaymentPortal(PaymentPortal):
 
-    @http.route('/shop/payment/transaction/<int:order_id>', type='json', auth='public', website=True)
+    @http.route('/shop/payment/transaction/<int:order_id>', type='json', auth='public', website=True, csrf=False, save_session=False)
     def shop_payment_transaction(self, order_id, access_token, **kwargs):
         """
         Override the e-commerce transaction processing route.

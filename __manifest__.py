@@ -1,7 +1,7 @@
 {
     'name': "Payment Provider: NEGDi Payment Services",
     'version': '1.0',
-    'author': 'NEGDi Processor', 
+    'author': 'Buya Volodya', 
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': "An NEGDi payment provider in Mongolia.",
@@ -15,6 +15,7 @@
     - Terminal ID
 
     Contact: hello@negdi.mn
+
     """,  # Non-empty string to avoid loading the README file.
     'depends': ['payment','website'],
     'data': [
@@ -32,4 +33,6 @@
     'post_init_hook': 'post_init_hook',
     'uninstall_hook': 'uninstall_hook',
     'license': 'LGPL-3',
+    'price': 49.99,
+    'currency': 'USD',
 }
