@@ -77,6 +77,9 @@ class PaymentTransaction(models.Model):
         if self.provider_code != 'negdi':
              # Should not happen if called correctly, but good practice
              return None
+        if self.currency_id.name == "MNT" and self.amount <= 300:
+            self._set_error(_("Payment limits error: Amount must greater than 300 MNT."))
+            raise ValidationError(_("Payment limits error: Amount must greater than 300 MNT."))
 
         provider = self.provider_id
         if not all([provider.negdi_terminal_identifier, provider.negdi_username, provider.negdi_password]):
