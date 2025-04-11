@@ -18,7 +18,7 @@
                     <field name="negdi_password"
                            string="NEGDi Merchant Password"
                            required="code == 'negdi' and state != 'disabled'"
-                           passowrd="True"/>
+                           password="True"/>
                 </group>
             </group>
         </field>
