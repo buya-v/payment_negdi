@@ -15,7 +15,7 @@ from odoo.addons.payment import utils as payment_utils
 
 from .. import utils as negdi_utils
 from ..const import PAYMENT_STATUS_MAPPING
-from ..const import NEGDI_DEFAULT_ORDER_TYPE
+from ..const import NEGDI_DEFAULT_ORDER_TYPE, NEGDI_QR_ORDER_TYPE
 from ..controllers.main import NEGDiController
 
 
@@ -106,8 +106,14 @@ class PaymentTransaction(models.Model):
             _logger.info("NEGDi: No linked Sale Order found for tx %s, using reference '%s'", self.reference, ordernum)
         # --- End Determine description ---
 
+        if self.payment_method_code =='card':
+            # Set the order type to 'Card' for card payments
+            order_type = NEGDI_DEFAULT_ORDER_TYPE
+        if self.payment_method_code == 'negdi_qpay':
+            order_type = NEGDI_QR_ORDER_TYPE
+
         payload = {
-            'ordertype': NEGDI_DEFAULT_ORDER_TYPE,
+            'ordertype': order_type,
             'terminalid': provider.negdi_terminal_identifier,
             'username': provider.negdi_username,
             'password': provider.negdi_password,

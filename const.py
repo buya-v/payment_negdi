@@ -36,3 +36,4 @@ NEGDI_INQUIRY_ORDER_ENDPOINT = 'ec1098' # Add Inquiry endpoint
 
 # Default ordertype for simple redirect
 NEGDI_DEFAULT_ORDER_TYPE = '3dsOrder' # Or 'Non3dsOrder' if CVV only is preferred initially
+NEGDI_QR_ORDER_TYPE = 'QPAY' # For QR code payments

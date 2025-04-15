@@ -48,6 +48,7 @@ paymentForm.include({
 
 
             // <<< --- START: ADD NEGDI CHECK --- >>>
+            
             if (processingValues.negdi_redirect_url) { // Check for YOUR custom key
                 console.log("NEGDi: Redirecting to:", processingValues.negdi_redirect_url);
                 window.location.href = processingValues.negdi_redirect_url;

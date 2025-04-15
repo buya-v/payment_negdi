@@ -9,6 +9,7 @@
         <field name="payment_method_ids"
                eval="[Command.set([
                          ref('payment.payment_method_card'),
+                         ref('payment_negdi.payment_method_negdi_qpay'),
                      ])]"
         />
     </record>
