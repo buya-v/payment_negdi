@@ -51,7 +51,8 @@ paymentForm.include({
             
             if (processingValues.negdi_redirect_url) { // Check for YOUR custom key
                 console.log("NEGDi: Redirecting to:", processingValues.negdi_redirect_url);
-                window.location.href = processingValues.negdi_redirect_url;
+                // window.location.href = processingValues.negdi_redirect_url;
+                window.location.assign(processingValues.negdi_redirect_url); // Use assign for redirection
                 return; // <- Stop processing this response further
             }
             // <<< --- END: ADD NEGDi CHECK --- >>>
