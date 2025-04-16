@@ -121,8 +121,8 @@ class PaymentTransaction(models.Model):
             'returnurl': self.get_base_url() + '/payment/negdi/return',
             'amount': self.amount,
             'currency': self.currency_id.name,
-            'ordernum': ordernum,
-            'description': self.reference,
+            'ordernum': self.reference,
+            'description': ordernum,
         }
 
         _logger.info("NEGDi: Sending ec1000 request for %s to %s:\n%s", self.reference, api_url, pprint.pformat(payload))
