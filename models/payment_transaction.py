@@ -118,7 +118,9 @@ class PaymentTransaction(models.Model):
             'username': provider.negdi_username,
             'password': provider.negdi_password,
             # Ensure get_base_url() is available or construct appropriately
-            'returnurl': self.get_base_url() + '/payment/negdi/return',
+            'returnurl': self.get_base_url() + NEGDiController._return_url,
+            # 'returnurl': urls.url_join(self.get_base_url(), NEGDiController._return_url),
+            # 'returnurl': 'https://itauco.mn',
             'amount': self.amount,
             'currency': self.currency_id.name,
             'ordernum': self.reference,
@@ -347,7 +349,7 @@ class PaymentTransaction(models.Model):
             _logger.info("NEGDi: Setting transaction %s to DONE based on status '%s'", self.reference, status)
             self._set_done()
             # Optionally write approval code if available
-            approval_code = order_data.get('approvalCode')
+            approval_code = order_data.get('checkid')
             if approval_code:
                  self.write({'narration': f"Approval Code: {approval_code}"}) # Example: store in narration
         elif status in PAYMENT_STATUS_MAPPING['pending']:
