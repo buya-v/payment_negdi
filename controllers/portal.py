@@ -30,8 +30,11 @@ class NegdiPaymentPortal(PaymentPortal):
     def shop_payment_transaction(self, order_id, access_token, **kwargs):
         """
         Override the e-commerce transaction processing route.
-        Creates the transaction, then if the provider is NEGDi, calls the backend API
-        and returns redirect URL. Otherwise, calls the original _get_processing_values.
+
+        :param order_id: The ID of the sale order.
+        :param access_token: The access token for the sale order.
+        :param kwargs: Additional parameters for the transaction.
+        :return: A JSON response with the redirect URL or an error message.
         """
         _logger.info(">>> ENTERED NegdiPaymentPortal.shop_payment_transaction override for Order %s <<<", order_id)
         tx_sudo = None # Initialize tx_sudo

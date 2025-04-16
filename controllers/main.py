@@ -18,7 +18,12 @@ class NEGDiController(http.Controller):
 
     @http.route(_return_url, type='http', auth='public', methods=['GET'], csrf=False, save_session=False)
     def negdi_return_from_checkout(self, **kwargs):
-        """ Handle the callback from NEGDi after payment attempt. """
+        """
+        Handle the callback from NEGDi after a payment attempt.
+
+        :param kwargs: The GET parameters sent by NEGDi, including 'tranid' and 'checkid'.
+        :return: A redirect to the payment status page.
+        """
         _logger.info("NEGDi: Handling return request with data:\n%s", pprint.pformat(kwargs))
 
         # Extract tranid and checkid from the GET parameters

@@ -30,6 +30,7 @@ class PaymentProvider(models.Model):
         string="NEGDi Merchant Password",
         required_if_provider='negdi',
         groups='base.group_system',
+        encrypt=True,
     )
 
     negdi_public_key = fields.Text(
@@ -61,19 +62,19 @@ class PaymentProvider(models.Model):
             'negdi_inquiry_order_url': f"{base_url}/{const.NEGDI_INQUIRY_ORDER_ENDPOINT}", # Add inquiry URL
         }
 
-    def _negdi_calculate_signature(self, data, incoming=True):
-        """ Compute the signature for the provided data according to the NEGDi documentation.
+    # def _negdi_calculate_signature(self, data, incoming=True):
+    #     """ Compute the signature for the provided data according to the NEGDi documentation.
 
-        :param dict data: The data to sign.
-        :param bool incoming: Whether the signature must be generated for an incoming (NEGDi to Odoo)
-                              or outgoing (Odoo to NEGDi) communication.
-        :return: The calculated signature.
-        :rtype: str
-        """
-        sign_data = ''.join([f'{k}={v}' for k, v in sorted(data.items()) if k != 'signature'])
-        key = self.negdi_sha_response if incoming else self.negdi_sha_request
-        signing_string = ''.join([key, sign_data, key])
-        return hashlib.sha256(signing_string.encode()).hexdigest()
+    #     :param dict data: The data to sign.
+    #     :param bool incoming: Whether the signature must be generated for an incoming (NEGDi to Odoo)
+    #                           or outgoing (Odoo to NEGDi) communication.
+    #     :return: The calculated signature.
+    #     :rtype: str
+    #     """
+    #     sign_data = ''.join([f'{k}={v}' for k, v in sorted(data.items()) if k != 'signature'])
+    #     key = self.negdi_sha_response if incoming else self.negdi_sha_request
+    #     signing_string = ''.join([key, sign_data, key])
+    #     return hashlib.sha256(signing_string.encode()).hexdigest()
 
     def _get_default_payment_method_codes(self):
         """ Override of `payment` to return the default payment method codes. """
