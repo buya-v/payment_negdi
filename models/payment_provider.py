@@ -17,35 +17,51 @@ class PaymentProvider(models.Model):
     code = fields.Selection(
         selection_add=[('negdi', "NEGDi Payment Services")], ondelete={'negdi': 'set default'}
     )
-    negdi_merchant_identifier = fields.Char(
-        string="NEGDi Merchant Identifier",
-        help="The code of the merchant account to use with this provider.",
-        required_if_provider='negdi',
-    )
-    negdi_access_code = fields.Char(
-        string="NEGDi Access Code",
-        help="The access code associated with the merchant account.",
+    negdi_terminal_identifier = fields.Char(
+        string="NEGDi Terminal ID",
+        help="The code of the merchant terminal to use with this provider.",
         required_if_provider='negdi',
         groups='base.group_system',
     )
-    negdi_sha_request = fields.Char(
-        string="NEGDi SHA Request Phrase",
+    negdi_username = fields.Char(
+        string="NEGDi Merchant Username",
         required_if_provider='negdi',
         groups='base.group_system',
     )
-    negdi_sha_response = fields.Char(
-        string="NEGDi SHA Response Phrase",
+    negdi_password = fields.Char(
+        string="NEGDi Merchant Password",
         required_if_provider='negdi',
         groups='base.group_system',
+        encrypt=True,
+    )
+
+    negdi_public_key = fields.Text(
+        string="NEGDi Public Key",
+        help="The PEM-formatted public key provided by NEGDi for verifying response signatures.",
+        groups='base.group_system',
+        # required_if_provider='negdi', # Make required if verification is mandatory
     )
 
     #=== BUSINESS METHODS ===#
 
     def _negdi_get_api_url(self):
+        """ Return the API URL according to the provider state. """
+        self.ensure_one()
         if self.state == 'enabled':
-            return 'https://checkout.payfort.com/FortAPI/paymentPage'
-        else:  # 'test'
-            return 'https://sbcheckout.payfort.com/FortAPI/paymentPage'
+            # Assume the URL in spec is TEST. Replace const.NEGDI_ENDPOINT_PROD later.
+            # You might want a dedicated field on the provider form to choose test/prod explicitly.
+            return const.NEGDI_API_URL_PROD
+        else: # 'disabled' or 'test'
+            return const.NEGDI_API_URL_TEST
+    
+    def _get_negdi_urls(self):
+        """ NEGDi URL getter."""
+        self.ensure_one()
+        base_url = self._negdi_get_api_url()
+        return {
+            'negdi_create_order_url': f"{base_url}/{const.NEGDI_CREATE_ORDER_ENDPOINT}",
+            'negdi_inquiry_order_url': f"{base_url}/{const.NEGDI_INQUIRY_ORDER_ENDPOINT}", # Add inquiry URL
+        }
 
     def _negdi_calculate_signature(self, data, incoming=True):
         """ Compute the signature for the provided data according to the NEGDi documentation.
