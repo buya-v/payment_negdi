@@ -46,8 +46,8 @@ msgstr "Codice di accesso"
 
 #. module: payment_negdi
 #: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
-msgid "Amazon Payment Services"
-msgstr "Servizi di pagamento Amazon"
+msgid "NEGDi Payment Services"
+msgstr "Servizi di pagamento NEGDi"
 
 #. module: payment_negdi
 #: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__code

@@ -15,7 +15,7 @@ class PaymentProvider(models.Model):
     _inherit = 'payment.provider'
 
     code = fields.Selection(
-        selection_add=[('negdi', "Amazon Payment Services")], ondelete={'negdi': 'set default'}
+        selection_add=[('negdi', "NEGDi Payment Services")], ondelete={'negdi': 'set default'}
     )
     negdi_merchant_identifier = fields.Char(
         string="NEGDi Merchant Identifier",

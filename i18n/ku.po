@@ -42,7 +42,7 @@ msgstr ""
 
 #. module: payment_negdi
 #: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
-msgid "Amazon Payment Services"
+msgid "NEGDi Payment Services"
 msgstr ""
 
 #. module: payment_negdi

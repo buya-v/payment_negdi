@@ -1,10 +1,10 @@
-# Amazon Payment Services
+# NEGDi Payment Services
 
 ## Technical details
 
 API: [Redirection API](https://paymentservices-reference.payfort.com/docs/api/build/index.html#redirection)
 
-This module integrates Amazon Payment Services using the generic payment with redirection flow based
+This module integrates NEGDi Payment Services using the generic payment with redirection flow based
 on form submission provided by the `payment` module.
 
 ## Supported features
@@ -23,7 +23,7 @@ on form submission provided by the `payment` module.
 
 ## Testing instructions
 
-https://paymentservices.amazon.com/docs/EN/12.html
+https://paymentservices.NEGDi.com/docs/EN/12.html
 
 ### VISA
 
