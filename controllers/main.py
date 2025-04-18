@@ -19,7 +19,7 @@ class NEGDiController(http.Controller):
     _webhook_url = '/payment/negdi/webhook'
 
     @http.route(
-        _return_url, type='http', auth='public', methods=['GET'], csrf=False, save_session=False
+        _return_url, type='http', auth='public', methods=['GET'], csrf=False, save_session=True
     )
     def negdi_return_from_checkout(self, **data):
         """ Process the notification data sent by NEGDi after redirection.
