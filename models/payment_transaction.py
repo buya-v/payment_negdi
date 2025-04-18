@@ -101,13 +101,13 @@ class PaymentTransaction(models.Model):
             'terminalid': provider.negdi_terminal_identifier,
             'username': provider.negdi_username,
             'password': provider.negdi_password,
-            'returnurl': self.get_base_url() + NEGDiController._return_url,
+            'returnurl': urls.url_join(self.get_base_url(), NEGDiController._return_url),
             'amount': self.amount,
             'currency': self.currency_id.name,
             'ordernum': self.reference,
             'description': sale_order,
         }
-
+        _logger.info("NEGDi: Using return url as %s", urls.url_join(self.get_base_url(), NEGDiController._return_url))
         _logger.info("NEGDi: Sending ec1000 request for %s to %s:\n%s", self.reference, api_url, pprint.pformat(payload))
         headers = {'Content-Type': 'application/json'}
         try:
