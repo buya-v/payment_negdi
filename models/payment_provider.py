@@ -20,17 +20,14 @@ class PaymentProvider(models.Model):
     negdi_terminal_identifier = fields.Char(
         string="NEGDi Terminal ID",
         help="The code of the merchant terminal to use with this provider.",
-        required_if_provider='negdi',
         groups='base.group_system',
     )
     negdi_username = fields.Char(
         string="NEGDi Merchant Username",
-        required_if_provider='negdi',
         groups='base.group_system',
     )
     negdi_password = fields.Char(
         string="NEGDi Merchant Password",
-        required_if_provider='negdi',
         groups='base.group_system',
         encrypt=True,
     )

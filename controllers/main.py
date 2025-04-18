@@ -19,7 +19,7 @@ class NEGDiController(http.Controller):
     _webhook_url = '/payment/negdi/webhook'
 
     @http.route(
-        _return_url, type='http', auth='public', methods=['GET'], csrf=False, save_session=True
+        _return_url, type='http', auth='public', methods=['GET'], csrf=False, save_session=False
     )
     def negdi_return_from_checkout(self, **data):
         """ Process the notification data sent by NEGDi after redirection.
@@ -35,7 +35,16 @@ class NEGDiController(http.Controller):
         :param dict data: The notification data.
         """
         _logger.info("Handling redirection from NEGDi with data:\n%s", pprint.pformat(data))
+        
+        # Extract tranid and checkid from the GET parameters
+        tranid = data.get('tranid')
+        checkid = data.get('checkid')
 
+        if not tranid or not checkid:
+            _logger.warning("NEGDi: Received incomplete return data: %s", data)
+            # Redirect to a generic error or status page if data is missing
+            return request.redirect('/payment/status?error=missing_data')
+        
         # Check the integrity of the notification.
         tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
             'negdi', data
@@ -46,7 +55,7 @@ class NEGDiController(http.Controller):
         tx_sudo._handle_notification_data('negdi', data)
         return request.redirect('/payment/status')
 
-    @http.route(_webhook_url, type='http', auth='public', methods=['POST'], csrf=False)
+    @http.route(_webhook_url, type='http', auth='public', methods=['POST'], csrf=False, save_session=False)
     def negdi_webhook(self, **data):
         """ Process the notification data sent by NEGDi to the webhook.
 
@@ -57,6 +66,7 @@ class NEGDiController(http.Controller):
         :rtype: str
         """
         _logger.info("Notification received from NEGDi with data:\n%s", pprint.pformat(data))
+
         try:
             # Check the integrity of the notification.
             tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
