@@ -5,7 +5,7 @@ import pprint
 import json # Import json
 import base64 # For signature verification later
 import requests # Import requests
-from requests.exceptions import RequestException # Import specific exceptions
+from requests.exceptions import RequestException, Timeout # Import specific exceptions
 
 from werkzeug import urls
 
@@ -87,7 +87,7 @@ class PaymentTransaction(models.Model):
             sale_order = self.sale_order_ids[0].name
             _logger.info("NEGDi: Using Sale Order name '%s' for tx %s", sale_order, self.reference)
         else:
-            _logger.info("NEGDi: No linked Sale Order found for tx %s, using reference '%s'", self.reference, ordernum)
+            _logger.info("NEGDi: No linked Sale Order found for tx %s, using reference '%s'", self.reference, sale_order)
         # --- End Determine description ---
 
         if self.payment_method_code =='card':

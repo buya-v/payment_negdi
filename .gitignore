@@ -175,3 +175,4 @@ odoo.conf
 start_odoo.sh
 
 .DS_Store
+.vscode
