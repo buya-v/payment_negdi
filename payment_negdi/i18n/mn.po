@@ -1,0 +1,279 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* payment_negdi
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0-20260324\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-15 04:42+0000\n"
+"PO-Revision-Date: 2026-09-15 04:42+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Language: mn\n"
+"Plural-Forms: \n"
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid " (no reversal)"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "%(status)s. %(detail)s"
+msgstr "%(status)s. %(detail)s"
+
+#. module: payment_negdi
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "API URL"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__code
+msgid "Code"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid ""
+"Connected, and the response signature verified. Order types enabled: %s."
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid "Could not reach the payment gateway."
+msgstr "Төлбөрийн системтэй холбогдож чадсангүй."
+
+#. module: payment_negdi
+#: model:ir.model.fields.selection,name:payment_negdi.selection__payment_provider__code__negdi
+#: model:payment.provider,name:payment_negdi.payment_provider_negdi
+msgid "NEGDI"
+msgstr "NEGDI"
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_api_url
+msgid "NEGDI API URL"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_transaction__negdi_checkid
+msgid "NEGDI Check ID"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_password
+msgid "NEGDI Password"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_public_key
+msgid "NEGDI Public Key"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_terminal_id
+msgid "NEGDI Terminal ID"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_username
+msgid "NEGDI Username"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.actions.server,name:payment_negdi.ir_cron_negdi_poll_pending_ir_actions_server
+msgid "NEGDI: settle unresolved payments"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,field_description:payment_negdi.field_payment_provider__negdi_insecure_url
+msgid "Negdi Insecure Url"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "No transaction found matching reference %s."
+msgstr "%s дугаартай гүйлгээ олдсонгүй."
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid "Not enabled on this terminal: %s."
+msgstr ""
+
+#. module: payment_negdi
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Password"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Payment %s."
+msgstr "Төлбөр: %s."
+
+#. module: payment_negdi
+#: model:ir.model,name:payment_negdi.model_payment_provider
+msgid "Payment Provider"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model,name:payment_negdi.model_payment_transaction
+msgid "Payment Transaction"
+msgstr ""
+
+#. module: payment_negdi
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Public Key"
+msgstr ""
+
+#. module: payment_negdi
+#: model:payment.method,name:payment_negdi.payment_method_qpay
+msgid "QPay"
+msgstr "QPay"
+
+#. module: payment_negdi
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Terminal ID"
+msgstr ""
+
+#. module: payment_negdi
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Test connection"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "The gateway did not open a payment page: %s"
+msgstr "Төлбөрийн хуудас нээгдсэнгүй: %s"
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid ""
+"The gateway refused the reversal (%(detail)s). NEGDI reverses a payment only"
+" on the day it was made; refund this customer by bank transfer instead and "
+"record it manually."
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid "The gateway refused these credentials: %s"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid ""
+"The gateway's response could not be verified with NEGDI's public key, so it "
+"was ignored."
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid "The payment gateway sent an unreadable response."
+msgstr "Төлбөрийн системээс уншигдахгүй хариу ирлээ."
+
+#. module: payment_negdi
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__code
+msgid "The technical code of this payment provider."
+msgstr ""
+
+#. module: payment_negdi
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid ""
+"This gateway address is plain HTTP, so the username and password\n"
+"                        travel unencrypted with every request. Ask NEGDI for an HTTPS address."
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Transaction %s has no gateway order to check."
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "Unknown payment status: %s"
+msgstr "Төлбөрийн тодорхойгүй төлөв: %s"
+
+#. module: payment_negdi
+#: model_terms:ir.ui.view,arch_db:payment_negdi.payment_provider_form
+msgid "Username"
+msgstr ""
+
+#. module: payment_negdi
+#: model:ir.model.fields,help:payment_negdi.field_payment_provider__negdi_public_key
+msgid ""
+"Verifies that each gateway response really comes from NEGDI (merchant spec, "
+"section 12). Replace it only with a key NEGDI itself gives you."
+msgstr ""
+
+#. module: payment_negdi
+#: model_terms:payment.provider,auth_msg:payment_negdi.payment_provider_negdi
+msgid "Your payment has been authorized."
+msgstr "Таны төлбөр баталгаажлаа."
+
+#. module: payment_negdi
+#: model_terms:payment.provider,cancel_msg:payment_negdi.payment_provider_negdi
+msgid "Your payment has been cancelled."
+msgstr "Таны төлбөр цуцлагдлаа."
+
+#. module: payment_negdi
+#: model_terms:payment.provider,pending_msg:payment_negdi.payment_provider_negdi
+msgid ""
+"Your payment has been successfully processed but is waiting for approval."
+msgstr "Таны төлбөр амжилттай хийгдсэн бөгөөд баталгаажуулалт хүлээж байна."
+
+#. module: payment_negdi
+#: model_terms:payment.provider,done_msg:payment_negdi.payment_provider_negdi
+msgid "Your payment has been successfully processed."
+msgstr "Таны төлбөр амжилттай хийгдлээ."
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "an approval arrived without an amount or currency"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_provider.py:0
+msgid "none"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "paid %(got)s, expected %(want)s"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "paid for order number %(got)s, expected %(want)s"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "paid in %(got)s, expected %(want)s"
+msgstr ""
+
+#. module: payment_negdi
+#. odoo-python
+#: code:addons/payment_negdi/models/payment_transaction.py:0
+msgid "the gateway answered about order %(got)s instead of %(want)s"
+msgstr ""

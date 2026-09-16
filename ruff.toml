@@ -1,0 +1,19 @@
+# Deliberately narrow. This is an Odoo module: `from . import models` in every
+# __init__.py is the framework's convention, not dead code, and `_("...%s", x)`
+# is how Odoo translates, so the rules that fight those are off rather than
+# rewritten around. Lint should be a signal; noise gets switched off by the
+# first contributor who trips over it.
+line-length = 110
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "B", "C4"]
+ignore = [
+    "E501",  # long lines live in prompts and data strings
+    "B008",  # Odoo calls fields in defaults
+]
+
+[lint.per-file-ignores]
+"__manifest__.py" = ["ALL"]
+"__init__.py" = ["F401"]        # re-exports are the point of an Odoo __init__
+"*/__init__.py" = ["F401"]

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Odoo ships a provider record only for gateways it knows, so this module
+         owns its own. Disabled until the credentials are entered. -->
+    <record id="payment_provider_negdi" model="payment.provider">
+        <field name="name">NEGDI</field>
+        <field name="code">negdi</field>
+        <field name="state">disabled</field>
+        <field name="image_128" type="base64" file="payment_negdi/static/description/icon.png"/>
+        <field name="redirect_form_view_id" ref="redirect_form"/>
+        <field name="allow_tokenization">False</field>
+        <field name="payment_method_ids" eval="[Command.set([
+            ref('payment.payment_method_card'),
+            ref('payment_negdi.payment_method_qpay'),
+        ])]"/>
+    </record>
+</odoo>

@@ -1,0 +1,44 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan">Payment Provider: NEGDI</h2>
+        <h3 class="oe_slogan">Mongolian card and QPay payments in Odoo - free and open source (LGPL-3)</h3>
+        <div class="oe_span12">
+            <p class="oe_mt32">
+                Take payments in Mongolian tugrik through the NEGDI e-commerce gateway: bank cards
+                with 3-D Secure, and QPay. The customer pays on NEGDI's page and comes back to your
+                Odoo, where the order is confirmed the way any other payment provider confirms it.
+            </p>
+        </div>
+    </div>
+    <div class="oe_row oe_spaced">
+        <div class="oe_span6">
+            <h3>Cards (3-D Secure)</h3>
+            <p>The card is authorised on the issuing bank's own page. <b>Card numbers never reach
+               your Odoo</b> and are never stored by this module.</p>
+        </div>
+        <div class="oe_span6">
+            <h3>QPay</h3>
+            <p>The customer scans the QR code in their banking app. The same transaction flow, the
+               same confirmation.</p>
+        </div>
+    </div>
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h3>What it does</h3>
+            <ul>
+                <li>Standard Odoo redirect flow: it works with eCommerce, invoices and payment links, with no per-shop code.</li>
+                <li>Every gateway response is verified against NEGDI's public key before it is trusted.</li>
+                <li>A scheduled job settles payments whose confirmation arrives late or not at all, so a customer who closes the browser is not left unconfirmed.</li>
+                <li>Refunds are offered only when NEGDI allows the transaction to be reversed.</li>
+                <li>Mongolian translation included; the checkout-visible messages read naturally in Mongolian.</li>
+            </ul>
+            <h3>Before you install</h3>
+            <p>You need a merchant account with NEGDI - they issue the username, password and
+               terminal ID you enter in Odoo. This module does not create that account for you.
+               Contact NEGDI at <a href="mailto:hello@negdi.mn">hello@negdi.mn</a>.</p>
+            <h3>Requirements</h3>
+            <p>Odoo 18, on your own server or Odoo.sh. Odoo Online cannot install custom modules.</p>
+            <p>Source and issues: <a href="https://github.com/buya-v/payment_negdi">github.com/buya-v/payment_negdi</a></p>
+        </div>
+    </div>
+</section>

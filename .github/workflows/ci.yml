@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    # 18.0 is the default branch: the Apps Store registers a repository by the
+    # branch named for the series, so development happens there, not on main.
+    branches: [18.0]
+  pull_request:
+
+jobs:
+  install-and-test:
+    name: Install into Odoo 18 and run the tests
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U odoo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      # The repository root is now the addons directory: it contains one folder
+      # per module (payment_negdi/), which is what the Odoo Apps store scans for.
+      - uses: actions/checkout@v4
+
+      # The odoo image is run as a step, not as the job's container: the image's
+      # user is odoo (uid 100) and the runner's workspace is root-owned, so
+      # actions/checkout cannot write there and the job dies before any step.
+      # --entrypoint matters too: the image's entrypoint appends its own
+      # --db_host after these arguments and would override it.
+      - name: Install the module and run its tests
+        run: |
+          set -o pipefail
+          docker run --rm --network host --entrypoint /usr/bin/odoo \
+            -v "$GITHUB_WORKSPACE:/mnt/extra-addons:ro" \
+            odoo:18.0 \
+            --addons-path=/usr/lib/python3/dist-packages/odoo/addons,/mnt/extra-addons \
+            --db_host=127.0.0.1 --db_port=5432 --db_user=odoo --db_password=odoo \
+            -d ci --data-dir=/tmp/odoo-data --without-demo=all \
+            -i payment_negdi --test-enable --test-tags /payment_negdi \
+            --stop-after-init --workers=0 --max-cron-threads=0 --log-level=info \
+            2>&1 | tee odoo.log
+
+          # Odoo exits 0 even when tests fail, so the log is the verdict.
+          if grep -qE "(FAIL|ERROR): Test" odoo.log; then
+            echo "::error::a test failed"; exit 1
+          fi
+          if ! grep -qE "0 failed, 0 error\(s\)" odoo.log; then
+            echo "::error::the test summary is missing; the module may not have installed"; exit 1
+          fi
+          echo "tests passed"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: ruff check .

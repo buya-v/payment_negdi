@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="redirect_form">
+        <!-- NEGDI returns a payment page per order. Its query string travels as
+             hidden inputs, because a GET form discards its action's own query. -->
+        <form t-att-action="api_url" method="get">
+            <t t-foreach="url_params" t-as="param">
+                <input type="hidden" t-att-name="param" t-att-value="url_params[param]"/>
+            </t>
+        </form>
+    </template>
+</odoo>
