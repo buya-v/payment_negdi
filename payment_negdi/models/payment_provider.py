@@ -85,13 +85,14 @@ class PaymentProvider(models.Model):
             response = requests.post(url, json=payload, timeout=30)
         except requests.exceptions.RequestException as exc:
             _logger.warning("NEGDI %s unreachable: %s", endpoint, exc)
-            raise ValidationError("NEGDI: " + _("Could not reach the payment gateway."))
+            raise ValidationError("NEGDI: " + _("Could not reach the payment gateway.")) from exc
         try:
             verified, order, _parsed = utils.verify_response(
                 response.text, self.sudo().negdi_public_key or const.DEFAULT_PUBLIC_KEY)
-        except ValueError:
+        except ValueError as exc:
             _logger.warning("NEGDI %s: HTTP %s with a non-JSON body", endpoint, response.status_code)
-            raise ValidationError("NEGDI: " + _("The payment gateway sent an unreadable response."))
+            raise ValidationError(
+                "NEGDI: " + _("The payment gateway sent an unreadable response.")) from exc
         if not verified:
             _logger.error("NEGDI %s: response signature did NOT verify (status=%s)",
                           endpoint, order.get('status'))
