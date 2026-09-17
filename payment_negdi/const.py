@@ -21,7 +21,21 @@ SUPPORTED_CURRENCIES = ('MNT',)
 # Status values (spec section 10). "Partially paid" is listed as a success level
 # by NEGDI, but for a purchase it means the order is NOT fully paid, so it must
 # not release what was bought.
-STATUS_DONE = ('Approved', 'Authorized', 'Funded', 'Fully paid')
+# Money that is OURS. Only these release what was bought.
+STATUS_DONE = ('Approved', 'Funded', 'Fully paid')
+
+# Money that is merely HELD: authorised against the card, not captured. Treating
+# this as done hands over the goods for funds we have not taken -- and NEGDI
+# confirmed on 2026-09-17 that they support pre-authorisation holds, so this can
+# now genuinely arrive. It stays PENDING until the gateway reports it funded.
+# Capture is not implemented yet (it needs NEGDI's capture endpoint), so the
+# provider deliberately does NOT declare support_manual_capture: doing so would
+# put a Capture button in the backend that cannot work.
+STATUS_HELD = ('Authorized',)
+
+# The gateway is telling us about real money on this order: an amount worth
+# checking against what we asked for, whether or not we may keep it yet.
+STATUS_ABOUT_MONEY = STATUS_DONE + STATUS_HELD
 STATUS_PENDING = ('Preparing', 'Transaction expected', 'Partially paid')
 STATUS_CANCEL = ('Expired', 'Cancelled', 'Rejected', 'Refused', 'Closed')
 STATUS_ERROR = ('Declined', 'System error')

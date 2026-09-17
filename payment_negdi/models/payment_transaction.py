@@ -113,6 +113,12 @@ class PaymentTransaction(models.Model):
         status = order.get('status')
         if status in const.STATUS_DONE:
             self._set_done()
+        elif status in const.STATUS_HELD:
+            # Authorised, not captured. Pending, never done: releasing the
+            # purchase here would give away goods for money still on hold.
+            _logger.info("NEGDI: %s is authorised but not captured; leaving it pending",
+                         self.reference)
+            self._set_pending()
         elif status in const.STATUS_PENDING:
             self._set_pending()
         elif status in const.STATUS_CANCEL:
@@ -129,7 +135,11 @@ class PaymentTransaction(models.Model):
         if str(order.get('tranid')) != (self.provider_reference or ''):
             return _("the gateway answered about order %(got)s instead of %(want)s",
                      got=order.get('tranid'), want=self.provider_reference)
-        if order.get('status') not in const.STATUS_DONE:
+        # Deliberately STATUS_ABOUT_MONEY, not STATUS_DONE: a hold carries an
+        # amount and a currency too, and they must be checked against what we
+        # asked for. Narrowing this to STATUS_DONE would stop verifying the
+        # amount on exactly the transactions we have not been paid for yet.
+        if order.get('status') not in const.STATUS_ABOUT_MONEY:
             return None
         amount, currency, ordernum = order.get('amount'), order.get('currency'), order.get('ordernum')
         if amount is None or not currency:

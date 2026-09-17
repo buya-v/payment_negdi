@@ -122,6 +122,28 @@ class TestNegdiTransaction(TransactionCase):
             tx._negdi_sync_status()
         self.assertEqual(tx.state, 'done')
 
+    def test_an_authorised_hold_is_pending_not_done(self):
+        """NEGDI supports pre-authorisation holds: money held is not money taken.
+
+        `Authorized` used to sit in STATUS_DONE, so a hold released the purchase
+        and granted credits for funds that were never captured.
+        """
+        tx = self._tx(provider_reference='555', negdi_checkid='chk1')
+        body = signed({'tranid': 555, 'checkid': 'chk1', 'status': 'Authorized',
+                       'amount': 10000.0, 'currency': 'MNT', 'ordernum': 'NEGDI-T1'})
+        with patch(_POST, return_value=_Resp(body)):
+            tx._negdi_sync_status()
+        self.assertEqual(tx.state, 'pending')
+
+    def test_a_hold_with_the_wrong_amount_is_still_rejected(self):
+        """The amount check must not be skipped just because it is only a hold."""
+        tx = self._tx(provider_reference='555', negdi_checkid='chk1')
+        body = signed({'tranid': 555, 'checkid': 'chk1', 'status': 'Authorized',
+                       'amount': 1.0, 'currency': 'MNT', 'ordernum': 'NEGDI-T1'})
+        with patch(_POST, return_value=_Resp(body)):
+            tx._negdi_sync_status()
+        self.assertEqual(tx.state, 'error')
+
     def test_wrong_amount_is_an_error_not_a_payment(self):
         tx = self._tx(provider_reference='555', negdi_checkid='chk1')
         with patch(_POST, return_value=_Resp(self._approved(amount=1))):
