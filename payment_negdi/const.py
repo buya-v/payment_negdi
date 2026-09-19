@@ -16,6 +16,12 @@ ORDER_TYPE_BY_PAYMENT_METHOD = {
 }
 DEFAULT_PAYMENT_METHOD_CODES = {'card', 'qpay'}
 
+# The order-type attributes we already act on. Everything else NEGDI returns
+# from ec1096 is surfaced by Test connection rather than dropped, because the
+# pre-authorisation flag -- if this terminal has one -- is among them and we do
+# not know what it is called.
+ORDER_TYPE_KNOWN_KEYS = ('ordertype', 'allowvoid')
+
 SUPPORTED_CURRENCIES = ('MNT',)
 
 # Status values (spec section 10). "Partially paid" is listed as a success level

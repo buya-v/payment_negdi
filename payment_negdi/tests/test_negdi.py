@@ -240,3 +240,48 @@ class TestNegdiTransaction(TransactionCase):
             'negdi', {'checkid': 'chk-found'})
         self.assertEqual(found, tx)
 
+
+@tagged('post_install', '-at_install')
+class TestNegdiOrderTypeDiagnostics(TransactionCase):
+    """Test connection must report what it does not understand.
+
+    Capture is blocked on one fact: whether this terminal can hold funds. That
+    is a property of the order type rather than of the request, so the flag is
+    in ec1096's reply under a name NEGDI chose. Dropping unknown attributes
+    threw the answer away on every call.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.provider = cls.env.ref('payment_negdi.payment_provider_negdi')
+
+    def _describe(self, types):
+        return self.provider._negdi_unknown_order_type_attributes(types)
+
+    def test_an_unknown_attribute_is_reported(self):
+        text = self._describe([
+            {'ordertype': '3dsOrder', 'allowvoid': 'true', 'authkind': 'Preliminary'},
+        ])
+        self.assertIn('3dsOrder', text)
+        self.assertIn('authkind=Preliminary', text)
+
+    def test_attributes_we_already_act_on_are_not_repeated(self):
+        """They are already in the first line; repeating them buries the new ones."""
+        self.assertEqual(self._describe([{'ordertype': 'QPAY', 'allowvoid': 'true'}]), '')
+
+    def test_every_order_type_is_reported_not_just_the_first(self):
+        text = self._describe([
+            {'ordertype': '3dsOrder', 'phase': 'Auth'},
+            {'ordertype': 'QPAY', 'phase': 'Single'},
+        ])
+        self.assertIn('3dsOrder: phase=Auth', text)
+        self.assertIn('QPAY: phase=Single', text)
+
+    def test_a_malformed_entry_does_not_break_the_button(self):
+        """ec1096 has already returned a bare dict instead of a list once. A
+        diagnostic that raises is worse than useless: it hides the diagnosis."""
+        self.assertEqual(self._describe(['not-a-dict', None]), '')
+
+    def test_nothing_enabled_reports_nothing(self):
+        self.assertEqual(self._describe([]), '')

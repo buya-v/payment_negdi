@@ -125,8 +125,39 @@ class PaymentProvider(models.Model):
         message = _("Connected, and the response signature verified. Order types enabled: %s.", listed)
         if missing:
             message += ' ' + _("Not enabled on this terminal: %s.", ', '.join(missing))
+
+        # Report EVERY attribute NEGDI sends back, not just the two we act on.
+        # Whether this terminal can HOLD funds rather than take them is a
+        # property of the order type, not of the request we send, so the answer
+        # is somewhere in here -- and we cannot guess what NEGDI calls it.
+        # Printing the unknown attributes turns that into a one-click question.
+        extra = self._negdi_unknown_order_type_attributes(types)
+        if extra:
+            message += '\n\n' + _("Other attributes NEGDI reports: %s", extra)
+        _logger.info("NEGDI order types: %s", types)
         return {
             'type': 'ir.actions.client', 'tag': 'display_notification',
             'params': {'title': "NEGDI", 'message': message,
-                       'type': 'warning' if missing else 'success', 'sticky': bool(missing)},
+                       'type': 'warning' if missing else 'success',
+                       'sticky': bool(missing) or bool(extra)},
         }
+
+    @api.model
+    def _negdi_unknown_order_type_attributes(self, types):
+        """The order-type attributes we do not already understand, as text.
+
+        Deliberately not filtered down to a guessed set of interesting names: if
+        NEGDI enables pre-authorisation, the flag saying so is one of these, and
+        a filter written before knowing its spelling would hide exactly the
+        thing we are looking for.
+        """
+        lines = []
+        for entry in types:
+            if not isinstance(entry, dict):
+                continue
+            rest = {k: v for k, v in entry.items() if k not in const.ORDER_TYPE_KNOWN_KEYS}
+            if rest:
+                lines.append('%s: %s' % (
+                    entry.get('ordertype') or '?',
+                    ', '.join('%s=%s' % (k, v) for k, v in sorted(rest.items()))))
+        return '; '.join(lines)
