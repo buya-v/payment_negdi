@@ -31,9 +31,10 @@ class PaymentProvider(models.Model):
              "spec, section 12). Replace it only with a key NEGDI itself gives you.")
     negdi_insecure_url = fields.Boolean(compute='_compute_negdi_insecure_url')
     negdi_allow_void = fields.Boolean(
-        string="NEGDI allows reversal", readonly=True,
-        help="Set by Test connection from what NEGDI reports for the enabled order types. "
-             "Refunds are offered only when every one of them allows reversal.")
+        string="NEGDI reports reversal allowed", readonly=True,
+        help="What NEGDI's ec1096 reports for the enabled order types, recorded by Test "
+             "connection. INFORMATIONAL ONLY: it does not decide whether refunds are offered, "
+             "because it has been observed to be false on a terminal where reversals work.")
 
     @api.depends('negdi_api_url')
     def _compute_negdi_insecure_url(self):
@@ -41,14 +42,27 @@ class PaymentProvider(models.Model):
             provider.negdi_insecure_url = bool(
                 provider.negdi_api_url and not provider.negdi_api_url.startswith('https://'))
 
-    @api.depends('code', 'negdi_allow_void')
+    @api.depends('code')
     def _compute_feature_support_fields(self):
         super()._compute_feature_support_fields()
-        # ec1099 reverses a whole payment, and only on the day it was made. A
-        # terminal NEGDI set up without reversal refuses it, so offering the
-        # button would only promise a refund that fails.
+        # ec1099 reverses a whole payment, and only on the day it was made, so
+        # never 'partial'.
+        #
+        # This deliberately does NOT consult negdi_allow_void. That flag was
+        # used to gate refunds, on the reasonable-sounding theory that a
+        # terminal without reversal would refuse them. It is wrong: on
+        # 2026-09-22 a real 1000 MNT payment was reversed successfully while
+        # ec1096 reported allowvoid=false for BOTH order types on that same
+        # merchant. Gating on it meant Odoo offered no refund at all on a
+        # terminal where refunds work -- the operator's only recourse being a
+        # manual bank transfer for money the gateway would have returned.
+        #
+        # Offering a refund that might fail is strictly better than hiding one
+        # that would have worked: _send_refund_request raises a UserError
+        # naming the gateway's own reason, which tells the operator what to do.
+        # A button that is missing tells them nothing.
         for provider in self.filtered(lambda p: p.code == 'negdi'):
-            provider.support_refund = 'full_only' if provider.negdi_allow_void else 'none'
+            provider.support_refund = 'full_only'
 
     def _get_supported_currencies(self):
         supported = super()._get_supported_currencies()
@@ -118,7 +132,7 @@ class PaymentProvider(models.Model):
             types = [types]
         enabled = {t.get('ordertype') for t in types}
         self.negdi_allow_void = bool(types) and all(str(t.get('allowvoid')).lower() == 'true' for t in types)
-        no_reversal = _(' (no reversal)')
+        no_reversal = _(' (reports allowvoid=false)')
         listed = ', '.join('%s%s' % (t.get('ordertype'), '' if str(t.get('allowvoid')).lower() == 'true' else no_reversal)
                            for t in types) or _("none")
         missing = sorted(set(const.ORDER_TYPE_BY_PAYMENT_METHOD.values()) - enabled)

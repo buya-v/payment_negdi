@@ -190,28 +190,36 @@ class TestNegdiTransaction(TransactionCase):
         with patch(_POST, return_value=_Resp(declined)), self.assertRaises(UserError):
             tx._send_refund_request()
 
-    def test_refunds_are_offered_only_when_negdi_allows_reversal(self):
-        self.provider.negdi_allow_void = False
-        self.provider.invalidate_recordset(['support_refund'])
-        self.assertEqual(self.provider.support_refund, 'none')
-        self.provider.negdi_allow_void = True
-        self.provider.invalidate_recordset(['support_refund'])
-        self.assertEqual(self.provider.support_refund, 'full_only')
+    def test_refunds_are_offered_whatever_allowvoid_says(self):
+        """allowvoid does NOT gate refunds, and gating on it was a real defect.
 
-    def test_test_connection_records_whether_reversal_is_allowed(self):
-        # ASLA's production terminal (2026-09-15) reports allowvoid false for both types.
+        On 2026-09-22 a 1000 MNT payment was reversed successfully while ec1096
+        reported allowvoid=false for both order types on that merchant. While
+        this was gated, Odoo offered no refund at all on a terminal where
+        refunds work, and the operator's only recourse was a manual bank
+        transfer for money the gateway would have returned.
+        """
+        for reported in (False, True):
+            self.provider.negdi_allow_void = reported
+            self.provider.invalidate_recordset(['support_refund'])
+            self.assertEqual(self.provider.support_refund, 'full_only',
+                             'refunds must be offered when allowvoid reports %r' % reported)
+
+    def test_refunds_are_never_offered_as_partial(self):
+        """ec1099 reverses the whole payment; there is no partial reversal."""
+        self.provider.invalidate_recordset(['support_refund'])
+        self.assertNotEqual(self.provider.support_refund, 'partial')
+
+    def test_test_connection_still_records_what_negdi_reported(self):
+        """The flag stays visible as a diagnostic; it just decides nothing."""
         mixed = signed({'status': 'Approved', 'ordertypes': [
             {'ordertype': '3dsOrder', 'title': '3DS Sale Order Type', 'allowvoid': False},
             {'ordertype': 'QPAY', 'title': 'QPay Order Type', 'allowvoid': True}]})
         with patch(_POST, return_value=_Resp(mixed)):
             result = self.provider.action_negdi_test_connection()
         self.assertFalse(self.provider.negdi_allow_void)
-        self.assertIn('3dsOrder (no reversal)', result['params']['message'])
-        both = signed({'status': 'Approved', 'ordertypes': [
-            {'ordertype': '3dsOrder', 'allowvoid': True}, {'ordertype': 'QPAY', 'allowvoid': True}]})
-        with patch(_POST, return_value=_Resp(both)):
-            self.provider.action_negdi_test_connection()
-        self.assertTrue(self.provider.negdi_allow_void)
+        self.assertIn('3dsOrder (reports allowvoid=false)', result['params']['message'])
+        # ...and the refund capability is unaffected by that report.
         self.provider.invalidate_recordset(['support_refund'])
         self.assertEqual(self.provider.support_refund, 'full_only')
 
