@@ -3,6 +3,8 @@ import base64
 import json
 from unittest.mock import patch
 
+import requests
+
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
@@ -189,6 +191,73 @@ class TestNegdiTransaction(TransactionCase):
         declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
         with patch(_POST, return_value=_Resp(declined)), self.assertRaises(UserError):
             tx._send_refund_request()
+
+    def _paid_tx(self):
+        """A transaction the gateway has confirmed as paid, ready to reverse."""
+        tx = self._tx(provider_reference='555', negdi_checkid='chk1')
+        with patch(_POST, return_value=_Resp(self._approved())):
+            tx._negdi_sync_status()
+        return tx
+
+    def test_a_failed_reversal_that_actually_landed_is_recorded_as_done(self):
+        """A failed RESPONSE is not a failed OPERATION.
+
+        Seen for real on 2026-09-22 against this gateway: reversal requested,
+        error returned, money reached the payer anyway. Believing the error is
+        what pays a customer twice -- the operator is told to send it by hand
+        on money that already went back.
+        """
+        tx = self._paid_tx()
+        declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
+        reversed_ = signed({'tranid': 555, 'status': 'Cancelled', 'amount': 10000,
+                            'currency': 'MNT', 'ordernum': 'NEGDI-T1'})
+        with patch(_POST, side_effect=[_Resp(declined), _Resp(reversed_)]):
+            refund_tx = tx._send_refund_request()
+        self.assertEqual(refund_tx.state, 'done',
+                         'ec1098 says the money is gone, so nothing is owed')
+
+    def test_a_reversal_that_genuinely_failed_still_tells_the_operator_to_pay(self):
+        tx = self._paid_tx()
+        declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
+        with patch(_POST, side_effect=[_Resp(declined), _Resp(self._approved())]), \
+                self.assertRaises(UserError) as caught:
+            tx._send_refund_request()
+        self.assertIn('bank transfer', str(caught.exception))
+
+    def test_an_inconclusive_inquiry_is_never_read_as_success(self):
+        """'Declined' from ec1098 means the INQUIRY went wrong, not that the
+        order was reversed. An earlier version read anything that was not money
+        as "it landed", which would report nothing owed and leave the customer
+        permanently out of pocket -- the mirror image of the double refund."""
+        tx = self._paid_tx()
+        declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
+        with patch(_POST, side_effect=[_Resp(declined), _Resp(declined)]), \
+                self.assertRaises(UserError) as caught:
+            tx._send_refund_request()
+        self.assertIn('Do NOT refund by hand yet', str(caught.exception))
+
+    def test_when_the_inquiry_also_fails_the_operator_is_told_not_to_pay_yet(self):
+        """Unknown is not the same as no. Paying out on an unknown is the
+        double refund this whole path exists to prevent."""
+        tx = self._paid_tx()
+        declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
+        with patch(_POST, side_effect=[_Resp(declined), _Resp('not json at all')]), \
+                self.assertRaises(UserError) as caught:
+            tx._send_refund_request()
+        message = str(caught.exception)
+        self.assertIn('Do NOT refund by hand yet', message)
+        self.assertNotIn('genuinely did not happen', message)
+
+    def test_an_unreachable_gateway_is_also_reconciled_not_assumed_failed(self):
+        """The riskiest case: we never saw an answer, so the request may well
+        have executed. It must not be treated as a plain failure."""
+        tx = self._paid_tx()
+        reversed_ = signed({'tranid': 555, 'status': 'Cancelled', 'amount': 10000,
+                            'currency': 'MNT', 'ordernum': 'NEGDI-T1'})
+        with patch(_POST, side_effect=[requests.exceptions.ConnectionError('down'),
+                                       _Resp(reversed_)]):
+            refund_tx = tx._send_refund_request()
+        self.assertEqual(refund_tx.state, 'done')
 
     def test_refunds_are_offered_whatever_allowvoid_says(self):
         """allowvoid does NOT gate refunds, and gating on it was a real defect.

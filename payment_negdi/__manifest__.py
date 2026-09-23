@@ -1,6 +1,6 @@
 {
     'name': 'Payment Provider: NEGDI',
-    'version': '18.0.1.2.0',
+    'version': '18.0.1.3.0',
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': "Mongolian card (3-D Secure) and QPay payments through the NEGDI e-commerce gateway.",

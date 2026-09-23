@@ -156,25 +156,113 @@ class PaymentTransaction(models.Model):
     # --- refunds ----------------------------------------------------------------
 
     def _send_refund_request(self, amount_to_refund=None):
+        """Reverse the payment through ec1099 -- a SAME-DAY reversal, not a refund.
+
+        NEGDI has no API for a later refund, so a refusal here is not retryable;
+        it is the end of the automatic path. But a refusal is not proof of
+        nothing having happened, which is why neither failure route concludes
+        anything without asking ec1098 first.
+        """
         refund_tx = super()._send_refund_request(amount_to_refund=amount_to_refund)
         if self.provider_code != 'negdi':
             return refund_tx
         creds = self.provider_id._negdi_credentials()
-        order = self.provider_id._negdi_request(const.ENDPOINT_CANCEL_ORDER, {
-            'tranid': self._negdi_tranid(),
-            'username': creds['username'],
-            'password': creds['password'],
-            'amount': round(self.amount, 2),
-        })
+        try:
+            order = self.provider_id._negdi_request(const.ENDPOINT_CANCEL_ORDER, {
+                'tranid': self._negdi_tranid(),
+                'username': creds['username'],
+                'password': creds['password'],
+                'amount': round(self.amount, 2),
+            })
+        except ValidationError as exc:
+            # Unreachable, unreadable, or a signature that did not verify. The
+            # request may still have been executed: we never saw the answer.
+            self._negdi_confirm_reversal(refund_tx, str(exc))
+            return refund_tx
         if order.get('status') not in const.STATUS_DONE:
-            raise UserError("NEGDI: " + _(
-                "The gateway refused the reversal (%(detail)s). NEGDI reverses a payment only "
-                "on the day it was made; refund this customer by bank transfer instead and "
-                "record it manually.",
-                detail=order.get('detail') or order.get('errors') or order.get('status')))
+            self._negdi_confirm_reversal(
+                refund_tx,
+                order.get('detail') or order.get('errors') or order.get('status'))
+            return refund_tx
         refund_tx.provider_reference = str(order.get('tranid') or self.provider_reference)
         refund_tx._set_done()
         return refund_tx
+
+    def _negdi_confirm_reversal(self, refund_tx, reason):
+        """The reversal reported failure -- did it happen anyway?
+
+        THE CASE THIS EXISTS FOR: on 2026-09-22, on a sibling integration
+        against this same gateway, a reversal was requested, an error came back,
+        and the money reached the payer regardless. **A failed RESPONSE is not a
+        failed OPERATION**, and believing the error is what turns one refund
+        into two: the operator is told to send the money by hand, and the
+        customer is paid twice.
+
+        So ask the only authority that knows -- ec1098, the inquiry this module
+        already treats as the truth about an order. Three outcomes, and the
+        third is the one that matters:
+
+        * the order no longer holds money -> the reversal LANDED. Record it and
+          say nothing was owed.
+        * it still does -> it genuinely did not happen. Manual transfer, as
+          before.
+        * the inquiry ALSO fails -> we do not know, which is NOT the same as
+          "no". Still manual, but the operator is told to verify FIRST, because
+          paying out on an unknown is exactly the double refund this method
+          exists to prevent.
+        """
+        self.ensure_one()
+        if not self.negdi_checkid:
+            raise UserError("NEGDI: " + _(
+                "The gateway refused the reversal (%(reason)s), and this transaction has no "
+                "check ID, so whether it happened cannot be confirmed. Check the payment in "
+                "NEGDI's portal BEFORE refunding by hand.", reason=reason))
+        try:
+            order = self.provider_id._negdi_request(const.ENDPOINT_INQUIRY_ORDER, {
+                'tranid': self._negdi_tranid(), 'checkid': self.negdi_checkid,
+            })
+        except ValidationError:
+            _logger.error(
+                "NEGDI: reversal of %s failed (%s) AND the ec1098 inquiry failed; "
+                "whether the money moved is UNKNOWN", self.reference, reason)
+            raise UserError("NEGDI: " + _(
+                "The gateway refused the reversal (%(reason)s) and then could not be asked "
+                "whether it happened anyway. Do NOT refund by hand yet: check this payment in "
+                "NEGDI's portal first, because it may already have been reversed.",
+                reason=reason))
+
+        status = order.get('status')
+        if status in const.STATUS_ABOUT_MONEY:
+            raise UserError("NEGDI: " + _(
+                "The gateway refused the reversal (%(reason)s) and the payment is still held "
+                "there, so it genuinely did not happen. NEGDI reverses a payment only on the "
+                "day it was made; refund this customer by bank transfer instead and record it "
+                "manually.", reason=reason))
+
+        # Success is claimed ONLY on a positive cancellation. An inquiry that
+        # answers 'Declined' or 'System error' is telling us the INQUIRY went
+        # wrong, not that the order was reversed -- and an earlier version of
+        # this method read "anything that is not money" as "it landed", which
+        # would have reported nothing owed and left the customer permanently out
+        # of pocket. That is the mirror image of the double refund, and just as
+        # bad. Anything we cannot positively read as cancelled is UNKNOWN.
+        if status not in const.STATUS_CANCEL:
+            _logger.error(
+                "NEGDI: reversal of %s failed (%s) and ec1098 answered %r, which says nothing "
+                "about whether the money moved", self.reference, reason, status)
+            raise UserError("NEGDI: " + _(
+                "The gateway refused the reversal (%(reason)s) and then answered "
+                "\"%(status)s\" when asked about the payment, which does not say whether it "
+                "was reversed. Do NOT refund by hand yet: check this payment in NEGDI's portal "
+                "first.", reason=reason, status=status))
+
+        _logger.warning(
+            "NEGDI: reversal of %s reported failure (%s) but ec1098 now reports %r -- "
+            "it landed. Nothing is owed to this customer.",
+            self.reference, reason, status)
+        refund_tx.provider_reference = str(order.get('tranid') or self.provider_reference)
+        refund_tx._set_done()
+        return True
 
     # --- polling ------------------------------------------------------------------
 

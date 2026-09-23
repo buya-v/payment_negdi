@@ -31,12 +31,26 @@ SUPPORTED_CURRENCIES = ('MNT',)
 STATUS_DONE = ('Approved', 'Funded', 'Fully paid')
 
 # Money that is merely HELD: authorised against the card, not captured. Treating
-# this as done hands over the goods for funds we have not taken -- and NEGDI
-# confirmed on 2026-09-17 that they support pre-authorisation holds, so this can
-# now genuinely arrive. It stays PENDING until the gateway reports it funded.
-# Capture is not implemented yet (it needs NEGDI's capture endpoint), so the
-# provider deliberately does NOT declare support_manual_capture: doing so would
-# put a Capture button in the backend that cannot work.
+# this as done hands over the goods for funds we have not taken, so it stays
+# PENDING until the gateway reports it funded.
+#
+# This mapping is INERT TODAY and that is deliberate. `Authorized` is a
+# TranzAxis feature -- TranzAxis being the core platform NEGDI runs on -- and
+# NEGDI have NOT implemented it yet (confirmed 2026-09-23); they are working on
+# it, a matter of days. It appears in the v1.8 status table only because the
+# spec inherits TranzAxis's status vocabulary, which is also why §10 files it
+# under "success": that table describes the platform, not what this gateway can
+# currently emit. So NEGDI cannot return `Authorized` at all right now, and
+# nothing here can misfire.
+#
+# It becomes correct the moment holds go live. That is the whole point of
+# landing it early: the alternative is deploying a state-mapping change in a
+# hurry, after the first held payment has already been treated as paid.
+#
+# Capture still has no endpoint -- the entire v1.8 API is nine functions and
+# none of them clears -- so the provider deliberately does NOT declare
+# support_manual_capture: that would put a Capture button in the backend that
+# cannot work.
 STATUS_HELD = ('Authorized',)
 
 # The gateway is telling us about real money on this order: an amount worth
