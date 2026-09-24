@@ -233,11 +233,11 @@ class PaymentTransaction(models.Model):
 
         status = order.get('status')
         if status in const.STATUS_ABOUT_MONEY:
-            raise UserError("NEGDI: " + _(
-                "The gateway refused the reversal (%(reason)s) and the payment is still held "
-                "there, so it genuinely did not happen. NEGDI reverses a payment only on the "
-                "day it was made; refund this customer by bank transfer instead and record it "
-                "manually.", reason=reason))
+            # The reversal genuinely did not happen, and the gateway is still
+            # holding money that is ours to send back. Fall down to the refund
+            # rail rather than handing the operator a bank transfer: ec1095 has
+            # no documented time limit, which is the whole reason it exists.
+            return self._negdi_refund(refund_tx, reason)
 
         # Success is claimed ONLY on a positive cancellation. An inquiry that
         # answers 'Declined' or 'System error' is telling us the INQUIRY went
@@ -260,6 +260,65 @@ class PaymentTransaction(models.Model):
             "NEGDI: reversal of %s reported failure (%s) but ec1098 now reports %r -- "
             "it landed. Nothing is owed to this customer.",
             self.reference, reason, status)
+        refund_tx.provider_reference = str(order.get('tranid') or self.provider_reference)
+        refund_tx._set_done()
+        return True
+
+    def _negdi_refund(self, refund_tx, reversal_reason):
+        """ec1095 REFUND -- the fallback when a same-day reversal is refused.
+
+        Reversal and refund are different operations, not synonyms. ec1099
+        VOIDS an unsettled transaction, which is why it is same-day and costs
+        nothing. ec1095 sends money back afterwards, which is why the spec gives
+        it no time limit -- and, presumably, why it costs something. So it is
+        never tried first.
+
+        Reaching here, two things are already established: ec1099 refused, and
+        ec1098 says the gateway is still holding the money. Only one thing can
+        then go wrong invisibly, and it is the same one as everywhere else here:
+        a lost response does not mean a refund that did not happen. There is no
+        second authority to ask, because ec1095 creates its OWN transaction with
+        its own tranid and a lost response means we never learned it. So the
+        operator is told to look, never told to pay.
+        """
+        self.ensure_one()
+        creds = self.provider_id._negdi_credentials()
+        try:
+            order = self.provider_id._negdi_request(const.ENDPOINT_REFUND, {
+                'tranid': self._negdi_tranid(),
+                'username': creds['username'],
+                'password': creds['password'],
+                # ec1095 documents "equal to or less than the original", so this
+                # is where partial refunds will arrive. support_refund is still
+                # full_only, so today this is always the whole amount.
+                'amount': round(self.amount, 2),
+            })
+        except ValidationError:
+            _logger.error(
+                "NEGDI: reversal of %s was refused (%s); the refund call then failed to "
+                "answer, so whether it executed is UNKNOWN", self.reference, reversal_reason)
+            raise UserError("NEGDI: " + _(
+                "The reversal was refused (%(reason)s) and the refund could not be completed "
+                "either, because the gateway did not answer. Do NOT refund by hand yet: the "
+                "refund may have gone through. Check this payment in NEGDI's portal first.",
+                reason=reversal_reason))
+
+        status = order.get('status')
+        if status not in const.STATUS_DONE:
+            # v1.13 gives ec1095 a `reason` field where the other calls use
+            # `errors`; take whichever the gateway filled in.
+            detail = (order.get('detail') or order.get('reason')
+                      or order.get('errors') or status)
+            _logger.warning("NEGDI: reversal of %s refused (%s); refund also refused (%s)",
+                            self.reference, reversal_reason, detail)
+            raise UserError("NEGDI: " + _(
+                "Neither a reversal nor a refund succeeded: the reversal was refused "
+                "(%(reversal)s) and the refund was refused (%(refund)s). Refund this customer "
+                "by bank transfer and record it manually.",
+                reversal=reversal_reason, refund=detail))
+
+        _logger.info("NEGDI: %s could not be reversed (%s); refunded via ec1095 instead",
+                     self.reference, reversal_reason)
         refund_tx.provider_reference = str(order.get('tranid') or self.provider_reference)
         refund_tx._set_done()
         return True

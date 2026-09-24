@@ -10,6 +10,15 @@ DEFAULT_API_URL = 'http://103.229.177.11:8032'
 ENDPOINT_CREATE_ORDER = '/api/pay/ec1000'      # Create order (simple): returns negdiurl
 ENDPOINT_INQUIRY_ORDER = '/api/pay/ec1098'     # Order inquiry: the authoritative status
 ENDPOINT_CANCEL_ORDER = '/api/pay/ec1099'      # Same-day reversal only
+# REFUND (spec v1.13 §7). A genuinely different operation from ec1099, not a
+# synonym: ec1099 VOIDS an unsettled transaction, which is why it is same-day
+# and free; ec1095 sends money back, which is why it carries no documented time
+# limit and why its amount may be "equal to or LESS THAN the original" -- the
+# spec grants partial here and withholds it from ec1099, deliberately.
+#
+# Assume it costs a fee until NEGDI say otherwise, and therefore try ec1099
+# first and fall back to this only when the gateway refuses.
+ENDPOINT_REFUND = '/api/pay/ec1095'
 ENDPOINT_ORDER_TYPES = '/api/pay/ec1096'       # Order types enabled for this merchant
 
 # Odoo payment method code -> NEGDI ``ordertype``.

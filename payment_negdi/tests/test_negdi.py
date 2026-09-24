@@ -243,13 +243,45 @@ class TestNegdiTransaction(TransactionCase):
         self.assertEqual(refund_tx.state, 'done',
                          'ec1098 says the money is gone, so nothing is owed')
 
-    def test_a_reversal_that_genuinely_failed_still_tells_the_operator_to_pay(self):
+    def test_a_reversal_refused_too_late_falls_through_to_the_refund_rail(self):
+        """ec1099 is same-day; ec1095 is not. A refusal is a reason to change
+        rail, not a reason to send someone to a bank."""
         tx = self._paid_tx()
         declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
-        with patch(_POST, side_effect=[_Resp(declined), _Resp(self._approved())]), \
+        refunded = signed({'tranid': 777, 'status': 'Approved', 'approvalCode': 'REJR7P'})
+        with patch(_POST, side_effect=[_Resp(declined),            # ec1099 refuses
+                                       _Resp(self._approved()),    # ec1098: money still there
+                                       _Resp(refunded)]) as post:  # ec1095 succeeds
+            refund_tx = tx._send_refund_request()
+        self.assertEqual(refund_tx.state, 'done')
+        self.assertEqual(refund_tx.provider_reference, '777',
+                         'the refund is its own transaction with its own tranid')
+        self.assertTrue(post.call_args_list[2].args[0].endswith('/api/pay/ec1095'))
+
+    def test_a_human_is_involved_only_when_both_rails_refuse(self):
+        tx = self._paid_tx()
+        declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
+        refused = signed({'tranid': 555, 'status': 'Declined', 'reason': 'RestrictionViolated'})
+        with patch(_POST, side_effect=[_Resp(declined), _Resp(self._approved()), _Resp(refused)]), \
                 self.assertRaises(UserError) as caught:
             tx._send_refund_request()
-        self.assertIn('bank transfer', str(caught.exception))
+        message = str(caught.exception)
+        self.assertIn('bank transfer', message)
+        self.assertIn('RestrictionViolated', message,
+                      "the refund's own reason must reach the operator, not just the reversal's")
+
+    def test_a_lost_refund_response_never_becomes_a_manual_payout(self):
+        """ec1095 makes its own transaction, so a lost response leaves nothing
+        to inquire against. Telling the operator to pay would risk paying twice."""
+        tx = self._paid_tx()
+        declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'not same day'})
+        with patch(_POST, side_effect=[_Resp(declined), _Resp(self._approved()),
+                                       requests.exceptions.ConnectionError('down')]), \
+                self.assertRaises(UserError) as caught:
+            tx._send_refund_request()
+        message = str(caught.exception)
+        self.assertIn('Do NOT refund by hand yet', message)
+        self.assertNotIn('bank transfer', message)
 
     def test_an_inconclusive_inquiry_is_never_read_as_success(self):
         """'Declined' from ec1098 means the INQUIRY went wrong, not that the
