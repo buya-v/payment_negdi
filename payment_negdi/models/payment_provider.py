@@ -45,8 +45,9 @@ class PaymentProvider(models.Model):
     @api.depends('code')
     def _compute_feature_support_fields(self):
         super()._compute_feature_support_fields()
-        # ec1099 reverses a whole payment, and only on the day it was made, so
-        # never 'partial'.
+        # 'partial' because ec1095 accepts "equal to or less than the original"
+        # (v1.13 §7). ec1099 does not, and _send_refund_request routes a partial
+        # request past it for exactly that reason.
         #
         # This deliberately does NOT consult negdi_allow_void. That flag was
         # used to gate refunds, on the reasonable-sounding theory that a
@@ -62,7 +63,7 @@ class PaymentProvider(models.Model):
         # naming the gateway's own reason, which tells the operator what to do.
         # A button that is missing tells them nothing.
         for provider in self.filtered(lambda p: p.code == 'negdi'):
-            provider.support_refund = 'full_only'
+            provider.support_refund = 'partial'
 
     def _get_supported_currencies(self):
         supported = super()._get_supported_currencies()

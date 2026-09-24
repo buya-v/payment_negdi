@@ -330,13 +330,39 @@ class TestNegdiTransaction(TransactionCase):
         for reported in (False, True):
             self.provider.negdi_allow_void = reported
             self.provider.invalidate_recordset(['support_refund'])
-            self.assertEqual(self.provider.support_refund, 'full_only',
+            self.assertEqual(self.provider.support_refund, 'partial',
                              'refunds must be offered when allowvoid reports %r' % reported)
 
-    def test_refunds_are_never_offered_as_partial(self):
-        """ec1099 reverses the whole payment; there is no partial reversal."""
+    def test_partial_refunds_are_offered(self):
+        """ec1095 accepts an amount at or below the original (v1.13 §7)."""
         self.provider.invalidate_recordset(['support_refund'])
-        self.assertNotEqual(self.provider.support_refund, 'partial')
+        self.assertEqual(self.provider.support_refund, 'partial')
+
+    def test_a_partial_refund_never_touches_the_reversal_rail(self):
+        """The money-losing mistake this guards against.
+
+        ec1099 reverses the WHOLE order; v1.13 grants "equal to or less than"
+        to ec1095 and withholds it here. Sending a part-amount to ec1099 would
+        hand the customer everything back and leave us short the difference,
+        with the gateway reporting success either way.
+        """
+        tx = self._paid_tx()
+        refunded = signed({'tranid': 777, 'status': 'Approved', 'approvalCode': 'REJR7P'})
+        with patch(_POST, side_effect=[_Resp(refunded)]) as post:
+            refund_tx = tx._send_refund_request(amount_to_refund=2500.0)
+        self.assertEqual(refund_tx.state, 'done')
+        self.assertEqual(len(post.call_args_list), 1,
+                         'exactly one call: no reversal was attempted')
+        self.assertTrue(post.call_args.args[0].endswith('/api/pay/ec1095'))
+        self.assertEqual(post.call_args.kwargs['json']['amount'], 2500.0,
+                         'the part amount, not the whole order')
+
+    def test_a_full_refund_still_tries_the_free_rail_first(self):
+        tx = self._paid_tx()
+        reversed_ok = signed({'tranid': 555, 'status': 'Approved'})
+        with patch(_POST, side_effect=[_Resp(reversed_ok)]) as post:
+            tx._send_refund_request(amount_to_refund=10000.0)
+        self.assertTrue(post.call_args.args[0].endswith('/api/pay/ec1099'))
 
     def test_test_connection_still_records_what_negdi_reported(self):
         """The flag stays visible as a diagnostic; it just decides nothing."""
@@ -349,7 +375,7 @@ class TestNegdiTransaction(TransactionCase):
         self.assertIn('3dsOrder (reports allowvoid=false)', result['params']['message'])
         # ...and the refund capability is unaffected by that report.
         self.provider.invalidate_recordset(['support_refund'])
-        self.assertEqual(self.provider.support_refund, 'full_only')
+        self.assertEqual(self.provider.support_refund, 'partial')
 
     def test_the_return_url_carries_no_query_string(self):
         # NEGDI appends "?tranid=..", so a query string of ours would be corrupted.
