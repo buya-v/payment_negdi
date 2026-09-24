@@ -199,6 +199,33 @@ class TestNegdiTransaction(TransactionCase):
             tx._negdi_sync_status()
         return tx
 
+    def test_a_reversed_order_is_cancelled_not_filed_as_an_unknown_status(self):
+        """'Reversed' entered NEGDI's status table on 2024.08.21, eight days after
+        the v1.8 spec this module was written from. Until v1.13 revealed it, a
+        legitimately reversed payment was filed as "Unknown payment status"."""
+        tx = self._tx(provider_reference='555', negdi_checkid='chk1')
+        preparing = signed({'tranid': 555, 'status': 'Preparing'})
+        with patch(_POST, return_value=_Resp(preparing)):
+            tx._negdi_sync_status()
+        self.assertEqual(tx.state, 'pending')
+
+        reversed_ = signed({'tranid': 555, 'status': 'Reversed'})
+        with patch(_POST, return_value=_Resp(reversed_)):
+            tx._negdi_sync_status()
+        self.assertEqual(tx.state, 'cancel')
+        self.assertNotIn('Unknown', tx.state_message or '')
+
+    def test_reversed_is_accepted_as_proof_that_a_reversal_landed(self):
+        """The most likely positive answer to "did it happen?" is this status.
+        Not recognising it defeated the whole reconciliation."""
+        tx = self._paid_tx()
+        declined = signed({'tranid': 555, 'status': 'Declined', 'detail': 'gateway hiccup'})
+        reversed_ = signed({'tranid': 555, 'status': 'Reversed', 'amount': 10000,
+                            'currency': 'MNT', 'ordernum': 'NEGDI-T1'})
+        with patch(_POST, side_effect=[_Resp(declined), _Resp(reversed_)]):
+            refund_tx = tx._send_refund_request()
+        self.assertEqual(refund_tx.state, 'done')
+
     def test_a_failed_reversal_that_actually_landed_is_recorded_as_done(self):
         """A failed RESPONSE is not a failed OPERATION.
 

@@ -2,7 +2,10 @@
 """Constants for the NEGDI e-commerce gateway (merchant API v1.8, 2024-08-13)."""
 
 # The gateway serves plain HTTP on this port; see the provider form's warning.
-DEFAULT_API_URL = 'http://103.229.177.10:8032'
+# NEGDI moved this host from .10 to .11 between spec v1.8 and v1.13. Prefer the
+# HTTPS endpoint NEGDI give you over either: credentials travel in the request
+# BODY, so plain HTTP puts the merchant password on the wire.
+DEFAULT_API_URL = 'http://103.229.177.11:8032'
 
 ENDPOINT_CREATE_ORDER = '/api/pay/ec1000'      # Create order (simple): returns negdiurl
 ENDPOINT_INQUIRY_ORDER = '/api/pay/ec1098'     # Order inquiry: the authoritative status
@@ -57,7 +60,16 @@ STATUS_HELD = ('Authorized',)
 # checking against what we asked for, whether or not we may keep it yet.
 STATUS_ABOUT_MONEY = STATUS_DONE + STATUS_HELD
 STATUS_PENDING = ('Preparing', 'Transaction expected', 'Partially paid')
-STATUS_CANCEL = ('Expired', 'Cancelled', 'Rejected', 'Refused', 'Closed')
+# 'Reversed' ("Гүйлгээ буцаагдсан байна") is the status a successfully reversed
+# order reports. It was added to NEGDI's status table on 2024.08.21 -- EIGHT DAYS
+# after the v1.8 spec this module was first written from, which is why it was
+# missing and why nothing caught it. Found in v1.13, 2026-09-24.
+#
+# Its absence broke two things in opposite directions: _negdi_sync_status filed a
+# legitimately reversed payment as "Unknown payment status", and
+# _negdi_confirm_reversal could not recognise the single most likely proof that a
+# reversal had landed, so it told the operator to go and check the portal instead.
+STATUS_CANCEL = ('Expired', 'Reversed', 'Cancelled', 'Rejected', 'Refused', 'Closed')
 STATUS_ERROR = ('Declined', 'System error')
 
 # How long an unresolved order keeps being polled.
