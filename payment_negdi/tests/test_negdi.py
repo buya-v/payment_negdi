@@ -364,6 +364,127 @@ class TestNegdiTransaction(TransactionCase):
             tx._send_refund_request(amount_to_refund=10000.0)
         self.assertTrue(post.call_args.args[0].endswith('/api/pay/ec1099'))
 
+    # --- refunding the same payment more than once ------------------------------
+
+    def _refunded(self, tranid=777):
+        return signed({'tranid': tranid, 'status': 'Approved', 'approvalCode': 'REJR7P'})
+
+    def test_a_second_refund_inside_the_post_processing_window_is_refused(self):
+        """Odoo's "available for refund" only drops once its post-processing
+        cron has run, about ten minutes later. Inside that window the wizard
+        offered the full amount again; a retry or a double click paid twice."""
+        tx = self._paid_tx()
+        with patch(_POST, side_effect=[_Resp(signed({'tranid': 555, 'status': 'Approved'}))]):
+            tx._send_refund_request()
+        with patch(_POST) as post, self.assertRaises(UserError) as caught:
+            tx._send_refund_request()
+        post.assert_not_called()
+        self.assertIn('already been sent back', str(caught.exception))
+
+    def test_after_a_partial_refund_the_rest_never_goes_to_the_reversal_rail(self):
+        """ec1099 voids the WHOLE order. After 3000 went back by ec1095, a
+        reversal of "the full amount" would return 10000 more, 13000 in all."""
+        tx = self._paid_tx()
+        with patch(_POST, side_effect=[_Resp(self._refunded(777))]):
+            tx._send_refund_request(amount_to_refund=3000.0)
+        with patch(_POST, side_effect=[_Resp(self._refunded(778))]) as post:
+            tx._send_refund_request(amount_to_refund=7000.0)
+        self.assertEqual(len(post.call_args_list), 1)
+        self.assertTrue(post.call_args.args[0].endswith('/api/pay/ec1095'))
+        self.assertEqual(post.call_args.kwargs['json']['amount'], 7000.0)
+
+    def test_partial_refunds_cannot_add_up_past_the_payment(self):
+        tx = self._paid_tx()
+        with patch(_POST, side_effect=[_Resp(self._refunded())]):
+            tx._send_refund_request(amount_to_refund=6000.0)
+        with patch(_POST) as post, self.assertRaises(UserError) as caught:
+            tx._send_refund_request(amount_to_refund=6000.0)
+        post.assert_not_called()
+        self.assertIn('Only 4', str(caught.exception))
+
+    def _refund_fails(self, tx, **kwargs):
+        """Refund, expecting a UserError, WITHOUT Odoo's assertRaises.
+
+        That one wraps the call in a savepoint and rolls it back when the error
+        is raised, which also erases the refund attempt the code records. In
+        production the attempt goes through a cursor of its own and survives
+        the rollback; this keeps the test faithful to that.
+        """
+        try:
+            tx._send_refund_request(**kwargs)
+        except UserError as exc:
+            return exc
+        self.fail("the refund was expected to stop with a UserError")
+
+    def test_a_lost_reversal_answer_never_falls_through_to_the_refund_rail(self):
+        """The reversal's answer was lost and ec1098 still says Approved. That
+        may only mean the reversal has not shown up yet; sending ec1095 now
+        would be the 2026-09-22 double refund, automated."""
+        tx = self._paid_tx()
+        with patch(_POST, side_effect=[requests.exceptions.ConnectionError('down'),
+                                       _Resp(self._approved())]) as post:
+            error = self._refund_fails(tx)
+        self.assertEqual(len(post.call_args_list), 2, 'ec1099 then ec1098, and no ec1095')
+        self.assertFalse(any(c.args[0].endswith('/api/pay/ec1095') for c in post.call_args_list))
+        self.assertIn('Do NOT refund by hand yet', str(error))
+        self.assertEqual(tx.negdi_refund_attempt_ids.rail, 'ec1099')
+
+    def test_a_lost_refund_answer_blocks_every_further_refund(self):
+        """The UserError rolls the refund back, so without a record the next
+        click would find no trace and send ec1095 again."""
+        tx = self._paid_tx()
+        with patch(_POST, side_effect=[requests.exceptions.ConnectionError('down')]):
+            self._refund_fails(tx, amount_to_refund=2500.0)
+        attempt = tx.negdi_refund_attempt_ids
+        self.assertEqual((attempt.rail, attempt.amount, attempt.resolution), ('ec1095', 2500.0, False))
+        self.assertTrue(tx.negdi_refund_unresolved)
+        with patch(_POST) as post, self.assertRaises(UserError) as caught:
+            tx._send_refund_request(amount_to_refund=1000.0)
+        post.assert_not_called()
+        self.assertIn('unknown outcome', str(caught.exception))
+
+    def test_no_money_moved_reopens_refunds(self):
+        tx = self._paid_tx()
+        with patch(_POST, side_effect=[requests.exceptions.ConnectionError('down')]):
+            self._refund_fails(tx, amount_to_refund=2500.0)
+        tx.negdi_refund_attempt_ids.action_mark_not_refunded()
+        self.assertFalse(tx.negdi_refund_unresolved)
+        with patch(_POST, side_effect=[_Resp(self._refunded())]):
+            refund_tx = tx._send_refund_request(amount_to_refund=2500.0)
+        self.assertEqual(refund_tx.state, 'done')
+
+    def test_money_sent_back_is_recorded_and_counted(self):
+        tx = self._paid_tx()
+        with patch(_POST, side_effect=[requests.exceptions.ConnectionError('down')]):
+            self._refund_fails(tx, amount_to_refund=2500.0)
+        attempt = tx.negdi_refund_attempt_ids
+        attempt.action_mark_refunded()
+        self.assertEqual(attempt.resolution, 'refunded')
+        self.assertEqual(tx._negdi_refunded_amount(), 2500.0)
+        with self.assertRaises(UserError):
+            attempt.action_mark_refunded()
+        with patch(_POST) as post, self.assertRaises(UserError):
+            tx._send_refund_request(amount_to_refund=8000.0)
+        post.assert_not_called()
+
+    def test_refunds_of_one_payment_are_serialised_by_an_update(self):
+        """FOR UPDATE alone would let a second refund wake up on its old
+        snapshot, blind to the first; only an UPDATE makes PostgreSQL refuse
+        it so that Odoo retries on a fresh one."""
+        tx = self._paid_tx()
+        executed = []
+        execute = type(self.env.cr).execute
+
+        def spy(cr, query, params=None, log_exceptions=True):
+            executed.append(str(query))
+            return execute(cr, query, params, log_exceptions)
+
+        with patch.object(type(self.env.cr), 'execute', spy), \
+                patch(_POST, side_effect=[_Resp(self._refunded())]):
+            tx._send_refund_request(amount_to_refund=1000.0)
+        self.assertTrue(any(q.startswith('UPDATE payment_transaction SET write_date = write_date')
+                            for q in executed))
+
     def test_test_connection_still_records_what_negdi_reported(self):
         """The flag stays visible as a diagnostic; it just decides nothing."""
         mixed = signed({'status': 'Approved', 'ordertypes': [
