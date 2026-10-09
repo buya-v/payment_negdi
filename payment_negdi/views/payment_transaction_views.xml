@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_transaction_form_negdi" model="ir.ui.view">
+        <field name="name">payment.transaction.form.negdi</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <sheet position="before">
+                <div class="alert alert-danger mb-0" role="alert" invisible="not negdi_refund_unresolved">
+                    A refund of this payment has an unknown outcome. Check the payment in
+                    NEGDI's portal, then record below what you found. No further refund
+                    is possible until then.
+                </div>
+            </sheet>
+            <sheet position="inside">
+                <group string="Refunds with an unknown outcome" invisible="not negdi_refund_attempt_ids">
+                    <field name="negdi_refund_unresolved" invisible="1"/>
+                    <field name="negdi_refund_attempt_ids" nolabel="1" colspan="2">
+                        <list>
+                            <field name="create_date" string="Attempted"/>
+                            <field name="rail"/>
+                            <field name="amount"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="reason"/>
+                            <field name="resolution"/>
+                            <field name="resolved_by_id" optional="hide"/>
+                            <button name="action_mark_refunded" type="object" string="Money was sent back"
+                                    class="btn-link" invisible="resolution"
+                                    confirm="Confirm that NEGDI's portal shows this money went back to the customer. A refund will be recorded for it."/>
+                            <button name="action_mark_not_refunded" type="object" string="No money moved"
+                                    class="btn-link" invisible="resolution"
+                                    confirm="Confirm that NEGDI's portal shows NO refund for this attempt. Refunding again will then be allowed."/>
+                        </list>
+                    </field>
+                </group>
+            </sheet>
+        </field>
+    </record>
+
+</odoo>

@@ -5,6 +5,7 @@ from urllib.parse import parse_qsl, quote, urljoin, urlsplit
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
+from odoo.modules import module as odoo_module
 from odoo.tools import float_compare
 
 from odoo.addons.payment_negdi import const
@@ -20,6 +21,16 @@ class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
 
     negdi_checkid = fields.Char(string="NEGDI Check ID", readonly=True, copy=False)
+    negdi_refund_attempt_ids = fields.One2many(
+        'payment.negdi.refund.attempt', 'source_transaction_id',
+        string="Refunds with an unknown outcome", readonly=True)
+    negdi_refund_unresolved = fields.Boolean(compute='_compute_negdi_refund_unresolved')
+
+    @api.depends('negdi_refund_attempt_ids.resolution')
+    def _compute_negdi_refund_unresolved(self):
+        for tx in self:
+            tx.negdi_refund_unresolved = any(
+                not attempt.resolution for attempt in tx.negdi_refund_attempt_ids)
 
     def _negdi_tranid(self):
         ref = self.provider_reference or ''
@@ -167,17 +178,25 @@ class PaymentTransaction(models.Model):
         So a PARTIAL refund must never touch ec1099. Sending a part-amount to a
         call that reverses the whole order would return the customer everything
         and leave us out of pocket for the difference, silently. Partial goes
-        straight to ec1095; only a full refund gets to try the free rail first.
+        straight to ec1095; only a full refund of an UNTOUCHED order gets to try
+        the free rail first.
 
         A refusal on the free rail is not proof that nothing happened, which is
         why neither failure route concludes anything without asking ec1098.
         """
-        refund_tx = super()._send_refund_request(amount_to_refund=amount_to_refund)
         if self.provider_code != 'negdi':
-            return refund_tx
+            return super()._send_refund_request(amount_to_refund=amount_to_refund)
 
+        self.ensure_one()
+        self._negdi_lock_for_refund()
         amount = amount_to_refund if amount_to_refund is not None else self.amount
-        if float_compare(amount, self.amount, precision_digits=2) < 0:
+        refunded = self._negdi_refunded_amount()
+        self._negdi_check_refund_allowed(amount, refunded)
+
+        refund_tx = super()._send_refund_request(amount_to_refund=amount_to_refund)
+        untouched = float_compare(refunded, 0, precision_digits=2) == 0
+        whole = float_compare(amount, self.amount, precision_digits=2) == 0
+        if not (untouched and whole):
             self._negdi_refund(refund_tx, amount)
             return refund_tx
 
@@ -192,18 +211,101 @@ class PaymentTransaction(models.Model):
         except ValidationError as exc:
             # Unreachable, unreadable, or a signature that did not verify. The
             # request may still have been executed: we never saw the answer.
-            self._negdi_confirm_reversal(refund_tx, str(exc))
+            self._negdi_confirm_reversal(refund_tx, str(exc), refused=False)
             return refund_tx
         if order.get('status') not in const.STATUS_DONE:
             self._negdi_confirm_reversal(
                 refund_tx,
-                order.get('detail') or order.get('errors') or order.get('status'))
+                order.get('detail') or order.get('errors') or order.get('status'),
+                refused=True)
             return refund_tx
         refund_tx.provider_reference = str(order.get('tranid') or self.provider_reference)
         refund_tx._set_done()
         return refund_tx
 
-    def _negdi_confirm_reversal(self, refund_tx, reason):
+    def _negdi_lock_for_refund(self):
+        """Serialise refunds of one payment.
+
+        A plain SELECT ... FOR UPDATE is not enough. Odoo's transactions are
+        REPEATABLE READ and this one has long since taken its snapshot, so a
+        second refund that waits on a lock would wake up still blind to the
+        refund the first one just committed, and pay again. UPDATING the row
+        is what closes it: once a concurrent refund has committed a change to
+        this row, PostgreSQL refuses ours with a serialization failure, and
+        Odoo retries the whole request on a fresh snapshot that sees it.
+        """
+        self.env.cr.execute(
+            "UPDATE payment_transaction SET write_date = write_date WHERE id = %s", [self.id])
+
+    def _negdi_refunded_amount(self):
+        """What this module has already sent back for this payment.
+
+        Counted from the refund transactions themselves, NOT from Odoo's
+        "available for refund": that only moves once the post-processing cron
+        has turned a refund into an accounting payment, ten minutes or so later.
+        Inside that window a second refund was offered the whole amount again.
+        """
+        refunds = self.env['payment.transaction'].sudo().search([
+            ('source_transaction_id', '=', self.id), ('operation', '=', 'refund'),
+            ('state', 'in', ('pending', 'authorized', 'done')),
+        ])
+        return -sum(refunds.mapped('amount'))
+
+    def _negdi_check_refund_allowed(self, amount, refunded):
+        if self.negdi_refund_unresolved:
+            attempt = self.negdi_refund_attempt_ids.filtered(lambda a: not a.resolution)[:1]
+            raise UserError("NEGDI: " + _(
+                "An earlier refund of this payment (%(amount)s, %(date)s) has an unknown "
+                "outcome. Check the payment in NEGDI's portal, then record what you found on "
+                "this payment, under \"Refunds with an unknown outcome\", before refunding "
+                "again.", amount=attempt.amount, date=attempt.create_date))
+        remaining = self.amount - refunded
+        if float_compare(amount, remaining, precision_digits=2) > 0:
+            raise UserError("NEGDI: " + _(
+                "Only %(remaining)s of this payment is left to refund: %(refunded)s has "
+                "already been sent back.", remaining=remaining, refunded=refunded))
+
+    def _negdi_refund_confirmed_manually(self, amount):
+        """Hook: someone confirmed in NEGDI's portal that ``amount`` went back.
+
+        A refund confirmed this way never passed through _send_refund_request,
+        so whatever a module does there when money is refunded -- taking back
+        what the payment bought, say -- it must also do here. Does nothing by
+        default.
+
+        Chains on rather than ending here: a module that does not depend on this
+        one may be loaded either side of it, and must be reached either way.
+        """
+        nxt = getattr(super(), '_negdi_refund_confirmed_manually', None)
+        if nxt:
+            nxt(amount)
+
+    def _negdi_refund_unknown(self, rail, amount, reason, message):
+        """Remember a refund whose outcome is unknown, then stop for a human.
+
+        The UserError rolls back everything this request did, including the
+        refund transaction, so the record goes through a cursor of its own --
+        otherwise the next click would find no trace and send the money again.
+        It cannot be blocked by this request's own lock: the row lock taken in
+        _negdi_lock_for_refund is FOR NO KEY UPDATE, and the foreign-key check
+        of the insert needs only FOR KEY SHARE.
+
+        Under the test runner there is no committed payment to reference and a
+        second connection would wait on this one forever, so tests record it on
+        their own cursor.
+        """
+        values = {'source_transaction_id': self.id, 'amount': amount, 'rail': rail,
+                  'reason': reason}
+        if odoo_module.current_test:
+            self.env['payment.negdi.refund.attempt'].sudo().create(values)
+        else:
+            with self.env.registry.cursor() as cr:
+                self.env(cr=cr, su=True)['payment.negdi.refund.attempt'].create(values)
+        _logger.error("NEGDI: refund of %s for %s via %s has an UNKNOWN outcome (%s)",
+                      self.reference, amount, rail, reason)
+        raise UserError("NEGDI: " + message)
+
+    def _negdi_confirm_reversal(self, refund_tx, reason, refused):
         """The reversal reported failure -- did it happen anyway?
 
         THE CASE THIS EXISTS FOR: on 2026-09-22, on a sibling integration
@@ -214,21 +316,20 @@ class PaymentTransaction(models.Model):
         customer is paid twice.
 
         So ask the only authority that knows -- ec1098, the inquiry this module
-        already treats as the truth about an order. Three outcomes, and the
-        third is the one that matters:
+        already treats as the truth about an order:
 
         * the order no longer holds money -> the reversal LANDED. Record it and
           say nothing was owed.
-        * it still does -> it genuinely did not happen. Manual transfer, as
-          before.
-        * the inquiry ALSO fails -> we do not know, which is NOT the same as
-          "no". Still manual, but the operator is told to verify FIRST, because
-          paying out on an unknown is exactly the double refund this method
-          exists to prevent.
+        * it still does, and ec1099 explicitly REFUSED (``refused``, a verified
+          answer) -> it genuinely did not happen; move to the refund rail.
+        * it still does, but ec1099's answer was LOST -> the reversal may still
+          be on its way, and the inquiry may simply not have caught up. Sending
+          ec1095 now would be paying twice on a guess, so stop for a human.
+        * the inquiry fails or says nothing useful -> unknown, not "no".
         """
         self.ensure_one()
         if not self.negdi_checkid:
-            raise UserError("NEGDI: " + _(
+            self._negdi_refund_unknown('ec1099', self.amount, reason, _(
                 "The gateway refused the reversal (%(reason)s), and this transaction has no "
                 "check ID, so whether it happened cannot be confirmed. Check the payment in "
                 "NEGDI's portal BEFORE refunding by hand.", reason=reason))
@@ -237,10 +338,7 @@ class PaymentTransaction(models.Model):
                 'tranid': self._negdi_tranid(), 'checkid': self.negdi_checkid,
             })
         except ValidationError:
-            _logger.error(
-                "NEGDI: reversal of %s failed (%s) AND the ec1098 inquiry failed; "
-                "whether the money moved is UNKNOWN", self.reference, reason)
-            raise UserError("NEGDI: " + _(
+            self._negdi_refund_unknown('ec1099', self.amount, reason, _(
                 "The gateway refused the reversal (%(reason)s) and then could not be asked "
                 "whether it happened anyway. Do NOT refund by hand yet: check this payment in "
                 "NEGDI's portal first, because it may already have been reversed.",
@@ -248,6 +346,12 @@ class PaymentTransaction(models.Model):
 
         status = order.get('status')
         if status in const.STATUS_ABOUT_MONEY:
+            if not refused:
+                self._negdi_refund_unknown('ec1099', self.amount, reason, _(
+                    "The reversal's answer was lost (%(reason)s) and the gateway still shows "
+                    "this payment as paid, which may only mean the reversal has not shown up "
+                    "yet. Do NOT refund by hand yet: check this payment in NEGDI's portal "
+                    "first.", reason=reason))
             # The reversal genuinely did not happen, and the gateway is still
             # holding money that is ours to send back. Fall down to the refund
             # rail rather than handing the operator a bank transfer: ec1095 has
@@ -262,10 +366,7 @@ class PaymentTransaction(models.Model):
         # of pocket. That is the mirror image of the double refund, and just as
         # bad. Anything we cannot positively read as cancelled is UNKNOWN.
         if status not in const.STATUS_CANCEL:
-            _logger.error(
-                "NEGDI: reversal of %s failed (%s) and ec1098 answered %r, which says nothing "
-                "about whether the money moved", self.reference, reason, status)
-            raise UserError("NEGDI: " + _(
+            self._negdi_refund_unknown('ec1099', self.amount, reason, _(
                 "The gateway refused the reversal (%(reason)s) and then answered "
                 "\"%(status)s\" when asked about the payment, which does not say whether it "
                 "was reversed. Do NOT refund by hand yet: check this payment in NEGDI's portal "
@@ -280,21 +381,19 @@ class PaymentTransaction(models.Model):
         return True
 
     def _negdi_refund(self, refund_tx, amount, reversal_reason=None):
-        """ec1095 REFUND -- the fallback when a same-day reversal is refused.
+        """ec1095 REFUND -- partial refunds, and full ones the reversal refused.
 
         Reversal and refund are different operations, not synonyms. ec1099
         VOIDS an unsettled transaction, which is why it is same-day and costs
         nothing. ec1095 sends money back afterwards, which is why the spec gives
-        it no time limit -- and, presumably, why it costs something. So it is
-        never tried first.
+        it no time limit -- and, presumably, why it costs something.
 
-        Reaching here, two things are already established: ec1099 refused, and
-        ec1098 says the gateway is still holding the money. Only one thing can
-        then go wrong invisibly, and it is the same one as everywhere else here:
-        a lost response does not mean a refund that did not happen. There is no
-        second authority to ask, because ec1095 creates its OWN transaction with
-        its own tranid and a lost response means we never learned it. So the
-        operator is told to look, never told to pay.
+        Only one thing can go wrong invisibly here, and it is the same one as
+        everywhere else: a lost response does not mean a refund that did not
+        happen. There is no second authority to ask, because ec1095 creates its
+        OWN transaction with its own tranid and a lost response means we never
+        learned it. So the attempt is recorded, and the operator is told to
+        look, never told to pay.
         """
         self.ensure_one()
         creds = self.provider_id._negdi_credentials()
@@ -307,10 +406,8 @@ class PaymentTransaction(models.Model):
                 # refund reaches this call and no other.
                 'amount': round(amount, 2),
             })
-        except ValidationError:
-            _logger.error("NEGDI: refund of %s failed to answer (after reversal: %s); "
-                          "whether it executed is UNKNOWN", self.reference, reversal_reason)
-            raise UserError("NEGDI: " + _(
+        except ValidationError as exc:
+            self._negdi_refund_unknown('ec1095', amount, str(exc), _(
                 "The refund could not be completed because the gateway did not answer. Do NOT "
                 "refund by hand yet: it may have gone through. Check this payment in NEGDI's "
                 "portal first."))
@@ -334,7 +431,7 @@ class PaymentTransaction(models.Model):
                 "transfer and record it manually.", refund=detail))
 
         _logger.info("NEGDI: %s refunded %s via ec1095 (reversal: %s)",
-                     self.reference, amount, reversal_reason or 'not attempted, partial')
+                     self.reference, amount, reversal_reason or 'not attempted')
         refund_tx.provider_reference = str(order.get('tranid') or self.provider_reference)
         refund_tx._set_done()
         return True
